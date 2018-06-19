@@ -45,7 +45,7 @@ done
 # TODO : configurer grub pour utiliser les "anciens" noms, puis rebooter ?
 if [ $ok -eq 0 ]
 then
-  echo "Aucune interface eth{0-2} trouvée"
+  echo "Aucune interface eth{0-2} trouvée. Vous devez utiliser les \"anciens\" noms de cartes"
   echo "GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\""
   echo "grub-mkconfig -o /boot/grub/grub.cfg"
   exit
