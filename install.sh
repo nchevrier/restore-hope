@@ -72,9 +72,7 @@ yes y | ssh-keygen -f /root/.ssh/id_rsa -N ""
 cp .ssh/id_rsa.pub .ssh/authorized_keys
 
 # Autoriser la connexion SSH avec le login root
-grep -v PermitRootLogin /etc/ssh/sshd_config > tmp
-mv tmp /etc/ssh/sshd_config
-echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
+sed '/PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
 
 # Ne pas faire de résolution DNS
 sed -i -E 's/#UseDNS /UseDNS /' /etc/ssh/sshd_config
