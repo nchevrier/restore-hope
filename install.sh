@@ -26,6 +26,7 @@ echo "iface lo inet loopback" >> /etc/network/interfaces
 
 ok=0
 
+# TODO: accepter le nouveau nommage des cartes
 for i in {0..2}
 do
   iface=eth$i
@@ -107,3 +108,10 @@ mkdir /root/rh2
 
 mkdir /etc/restore
 echo nbr_systemes:0 > /etc/restore/base_restore.conf
+
+# TODO: inittab
+cmdline='-\/sbin\/agetty --noclear %I $TERM -i -n -l \/usr\/local\/sbin\/restore2.sh'
+sed -i --follow-symlinks "s/^ExecStart=.*$/ExecStart=$cmdline/" /etc/systemd/system/getty.target.wants/getty\@tty1.service
+
+
+# TODO: setleds
