@@ -24,12 +24,13 @@ fi
 echo "auto lo" > /etc/network/interfaces
 echo "iface lo inet loopback" >> /etc/network/interfaces
 
+# Accepter le nouveau nommage des cartes (en) mais aussi l'ancien (eth)
+ethif=$(ip -o l show | awk -F': ' '{print $2}' | grep -E "^(eth|en)")
+
 ok=0
 
-# TODO: accepter le nouveau nommage des cartes
-for i in {0..2}
+for iface in $ethif
 do
-  iface=eth$i
   ip a show dev $iface > /dev/null 2>&1
 
   if [ $? -eq 0 ]
@@ -40,17 +41,6 @@ do
     ok=1
   fi
 done
-
-# Aucune interface trouvée, abandonner.
-# Peut être que le système utilise les "nouveaux" noms de cartes
-# TODO : configurer grub pour utiliser les "anciens" noms, puis rebooter ?
-if [ $ok -eq 0 ]
-then
-  echo "Aucune interface eth{0-2} trouvée. Vous devez utiliser les \"anciens\" noms de cartes"
-  echo "GRUB_CMDLINE_LINUX=\"net.ifnames=0 biosdevname=0\""
-  echo "grub-mkconfig -o /boot/grub/grub.cfg"
-  exit
-fi
 
 # cd /root
 cd
