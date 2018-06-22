@@ -72,7 +72,7 @@ yes y | ssh-keygen -f /root/.ssh/id_rsa -N ""
 cp .ssh/id_rsa.pub .ssh/authorized_keys
 
 # Autoriser la connexion SSH avec le login root
-sed '/PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+sed -i -E '/PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
 
 # Ne pas faire de résolution DNS
 sed -i -E 's/#UseDNS /UseDNS /' /etc/ssh/sshd_config
@@ -85,10 +85,25 @@ echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
 echo "UserKnownHostsFile /dev/null" >> /etc/ssh/ssh_config
 
 # Copier les scripts
-cp rhstart.sh initrh2.sh rh2.sh receive.sh restore2.sh puppet.sh rhquit.sh /usr/local/sbin/
+
+# puppet.sh receive.sh restore2.sh
+cp puppets/*.sh /usr/local/sbin/
+
+# rhstart.sh initrh2.sh rh2.sh rhquit.sh
+cp commander/*.sh /usr/local/sbin/
+
+# base_restore_manager.sh	crea_img.sh
+cp admin/*.sh /usr/local/sbin/
 
 # Les rendre exécutables
 # Pas besoin, git préserve les droits d'exécution
 
 # Créer le répertoire de RH
 mkdir /root/rh2
+
+####
+#
+####
+
+mkdir /etc/restore
+echo nbr_systemes:0 > /etc/restore/base_restore.conf
