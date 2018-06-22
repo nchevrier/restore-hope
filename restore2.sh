@@ -3,13 +3,13 @@
 export RH_BIN_DIR="/usr/local/sbin"
 export RH_DIR="/root/rh2"
 
-t=$(tty)
+#t=$(tty)
 
-if [ $t != "/dev/tty1" ]
-then
-	/bin/login
-	exit
-fi
+#if [ $t != "/dev/tty1" ]
+#then
+#	/bin/login
+#	exit
+#fi
 
 ####
 # Text colors

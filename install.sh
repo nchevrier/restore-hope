@@ -103,8 +103,20 @@ mkdir /etc/restore
 echo nbr_systemes:0 > /etc/restore/base_restore.conf
 
 # TODO: inittab
-cmdline='-\/sbin\/agetty --noclear %I $TERM -i -n -l \/usr\/local\/sbin\/restore2.sh'
-sed -i --follow-symlinks "s/^ExecStart=.*$/ExecStart=$cmdline/" /etc/systemd/system/getty.target.wants/getty\@tty1.service
+# Drop-in pour tty1
+# https://askubuntu.com/questions/659267/how-do-i-override-or-configure-systemd-services
 
+SYSTEMD_EDITOR=tee systemctl edit getty@tty1 << EOF
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --noclear %I $TERM -n -i -l /usr/local/sbin/restore2.sh
+EOF
+
+systemctl restart getty@tty1
+
+#cmdline='-\/sbin\/agetty --noclear %I $TERM -i -n -l \/usr\/local\/sbin\/restore2.sh'
+#sed -i --follow-symlinks "s/^ExecStart=.*$/ExecStart=$cmdline/" /etc/systemd/system/getty.target.wants/getty\@tty1.service
 
 # TODO: setleds
+# systemd, pas init
+# https://wiki.archlinux.org/index.php/Activating_Numlock_on_Bootup#Using_a_separate_service
