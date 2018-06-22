@@ -6,10 +6,14 @@ then
   exit
 fi
 
+# cd /root
+cd
+
 ####
 # Requis : une carte branchée avec accès internet
 # TODO : tenter de configurer la carte si on détecte un câble branché ?
 ####
+
 netif=$(ip route | grep default)
 
 if [ $? -ne 0 ]
@@ -21,6 +25,7 @@ fi
 ####
 # Configuration dynamique persistante pour toutes les cartes
 ####
+
 echo "auto lo" > /etc/network/interfaces
 echo "iface lo inet loopback" >> /etc/network/interfaces
 
@@ -42,9 +47,9 @@ do
   fi
 done
 
-# cd /root
-cd
-
+####
+# Paquetages
+####
 
 apt-get update
 apt-get install -y openssh-server \
@@ -55,6 +60,10 @@ apt-get install -y openssh-server \
                 exfat-fuse \
                 ntfs-3g \
                 partclone
+
+####
+# SSH
+####
 
 # Pas de passphrase, écraser (y) la clé si elle existe déjà
 yes y | ssh-keygen -f /root/.ssh/id_rsa -N ""
@@ -75,7 +84,9 @@ systemctl restart sshd
 echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
 echo "UserKnownHostsFile /dev/null" >> /etc/ssh/ssh_config
 
+####
 # Copier les scripts
+####
 
 #
 cp restore2.sh /usr/local/sbin
@@ -102,17 +113,17 @@ mkdir /root/rh2
 mkdir /etc/restore
 echo nbr_systemes:0 > /etc/restore/base_restore.conf
 
-# TODO: inittab
+####
+# Lancer restore2.sh sur tty au démarrage
+####
+
 # Drop-in pour tty1
 # https://askubuntu.com/questions/659267/how-do-i-override-or-configure-systemd-services
-
 SYSTEMD_EDITOR=tee systemctl edit getty@tty1 << EOF
 [Service]
 ExecStart=
 ExecStart=-/sbin/agetty --noclear %I $TERM -n -i -l /usr/local/sbin/restore2.sh
 EOF
-
-systemctl restart getty@tty1
 
 #cmdline='-\/sbin\/agetty --noclear %I $TERM -i -n -l \/usr\/local\/sbin\/restore2.sh'
 #sed -i --follow-symlinks "s/^ExecStart=.*$/ExecStart=$cmdline/" /etc/systemd/system/getty.target.wants/getty\@tty1.service
@@ -120,3 +131,6 @@ systemctl restart getty@tty1
 # TODO: setleds
 # systemd, pas init
 # https://wiki.archlinux.org/index.php/Activating_Numlock_on_Bootup#Using_a_separate_service
+
+# Exec at the very end, otherwise the rest of the script will not be executed
+#systemctl restart getty@tty1
