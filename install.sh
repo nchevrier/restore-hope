@@ -77,13 +77,16 @@ echo "UserKnownHostsFile /dev/null" >> /etc/ssh/ssh_config
 
 # Copier les scripts
 
-# puppet.sh receive.sh restore2.sh
+#
+cp restore2.sh /usr/local/sbin
+
+# puppet.sh receive.sh
 cp puppets/*.sh /usr/local/sbin/
 
 # rhstart.sh initrh2.sh rh2.sh rhquit.sh
 cp commander/*.sh /usr/local/sbin/
 
-# base_restore_manager.sh	crea_img.sh
+# base_restore_manager.sh crea_img.sh
 cp admin/*.sh /usr/local/sbin/
 
 # Les rendre exécutables
