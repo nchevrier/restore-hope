@@ -128,9 +128,16 @@ EOF
 #cmdline='-\/sbin\/agetty --noclear %I $TERM -i -n -l \/usr\/local\/sbin\/restore2.sh'
 #sed -i --follow-symlinks "s/^ExecStart=.*$/ExecStart=$cmdline/" /etc/systemd/system/getty.target.wants/getty\@tty1.service
 
-# TODO: setleds
+####
+# setleds
+####
+
 # systemd, pas init
 # https://wiki.archlinux.org/index.php/Activating_Numlock_on_Bootup#Using_a_separate_service
+SYSTEMD_EDITOR=tee systemctl edit getty@.service << EOF
+[Service]
+ExecStartPre=/bin/sh -c 'setleds -D +num < /dev/%I'
+EOF
 
 # Exec at the very end, otherwise the rest of the script will not be executed
 #systemctl restart getty@tty1
