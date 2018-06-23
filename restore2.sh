@@ -115,41 +115,39 @@ do
 		socat UDP-LISTEN:24000 EXEC:$RH_BIN_DIR/puppet.sh &
 		# Wait infinitely
 		#sleep infinity
+	fi
 
-	# Not in puppet mode
-	else
+	# Not a timeout and not in puppet mode :
+	# user pressed a key; process and exit
+	if [ $read_result -eq 0 -a "$masterip" == "" ]
+	then
+		chemin="0"
+		image="0"
+		type= "0"
 
-		# Not a timeout : user pressed a key; process and exit
-		if [ $read_result -eq 0 ]
+		chemin="$(grep "^$num:" $base_r | cut -d: -f3)"
+		image="$(grep "^$num:" $base_r | cut -d: -f4)"
+		type="$(grep "^$num:" $base_r | cut -d: -f5)"
+
+		if [ $chemin != "0" -a $image != "0" -a $num != "0" -a $? -eq 0 ]
 		then
-			chemin="0"
-			image="0"
-			type= "0"
+			zcat $image |partclone.$type -r -o $chemin && init 0
+			#	partimage restore -b -f1 $chemin $image.$fin_img
+			sleep 5
+			exit 0
+		else
+			echo ""
 
-			chemin="$(grep "^$num:" $base_r | cut -d: -f3)"
-			image="$(grep "^$num:" $base_r | cut -d: -f4)"
-			type="$(grep "^$num:" $base_r | cut -d: -f5)"
+			i=0
+			while [ $i -lt 18 ]
+			do
+				echo "	Quand on me demande un numero entre 1 et $nbr_sys je donne un numero entre 1 et $nbr_sys"
+		        	i=`expr $i + 1`
+			done
 
-			if [ $chemin != "0" -a $image != "0" -a $num != "0" -a $? -eq 0 ]
-			then
-				zcat $image |partclone.$type -r -o $chemin && init 0
-				#	partimage restore -b -f1 $chemin $image.$fin_img
-				sleep 5
-				exit 0
-			else
-				echo ""
-
-				i=0
-				while [ $i -lt 18 ]
-				do
-					echo "	Quand on me demande un numero entre 1 et $nbr_sys je donne un numero entre 1 et $nbr_sys"
-			        	i=`expr $i + 1`
-				done
-
-				sleep 5
-			fi
-
-			exit
+			sleep 5
 		fi
+
+		exit
 	fi
 done
