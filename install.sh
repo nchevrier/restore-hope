@@ -119,7 +119,12 @@ echo nbr_systemes:0 > /etc/restore/base_restore.conf
 
 # Drop-in pour tty1
 # https://askubuntu.com/questions/659267/how-do-i-override-or-configure-systemd-services
-SYSTEMD_EDITOR=tee systemctl edit getty@tty1 << EOF
+# Bug : Cannot edit units if not on a tty
+#SYSTEMD_EDITOR=tee systemctl edit getty@tty1 << EOF
+
+mkdir /etc/systemd/system/getty\@tty1.service.d
+
+cat > /etc/systemd/system/getty\@tty1.service.d/override.conf << EOF
 [Service]
 ExecStart=
 ExecStart=-/sbin/agetty --noclear %I $TERM -n -i -l /usr/local/sbin/restore2.sh
@@ -134,7 +139,12 @@ EOF
 
 # systemd, pas init
 # https://wiki.archlinux.org/index.php/Activating_Numlock_on_Bootup#Using_a_separate_service
-SYSTEMD_EDITOR=tee systemctl edit getty@.service << EOF
+# Bug : Cannot edit units if not on a tty
+#SYSTEMD_EDITOR=tee systemctl edit getty@.service << EOF
+
+mkdir /etc/systemd/system/getty\@.service.d
+
+cat > /etc/systemd/system/getty\@.service.d/override.conf << EOF
 [Service]
 ExecStartPre=/bin/sh -c 'setleds -D +num < /dev/%I'
 EOF
