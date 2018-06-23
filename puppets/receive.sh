@@ -82,14 +82,17 @@ http_proxy=${http_proxy:-http://proxy.iutcv.fr:3128}
 https_proxy=${https_proxy:-$http_proxy}
 ftp_proxy=${ftp_proxy:-$http_proxy}
 
-if [ $# -lt 2 ]
+if [ $# -lt 1 ]
 then
   echo "$0 send partition dstpath [localfile]"
   echo "$0 exec partition cmd"
+  echo "$0 cancel"
+  echo "$0 restore partition"
+  echo "$0 save partition"
   exit
 fi
 
-echo Remote command: $@
+echo Remote command: "$@"
 
 cmd=$1
 partition=$2
@@ -181,8 +184,11 @@ then
   # exec on RH system
   if [ $partition == "rh" ]
   then
-    /bin/bash -c "$@"
+    all=$@
+    /bin/bash -c "$all"
 
+    # Warning : if one of the commands inside the pipeline fails
+    # (except the last), bash returns 0
     rh_cmd_res=$?
   # exec on other system: need to chroot
   else

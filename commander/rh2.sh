@@ -186,53 +186,17 @@ count=$(echo $clientip | wc -w)
 #clientip="$clientip 127.0.0.1"
 #nohup ./receive.sh $partition $dstpath $file > nohup.log 2>&1 &
 
-####
-# Exec command on master first
-# Maybe should exec on master AFTER puppets (to let a chance to the master
-# to finish its duty (eg reboot or shutdown everybody)
-####
-if [ $cmd == "cancel" ]
-then
-  nohup $REMOTE_RH_PATH cancel foo > $RH_DIR/nohup.log 2>&1 &
-elif [ $cmd == "send" ]
+if [ $cmd == "send" ]
 then
   netif=$(ip route | grep default | awk '{print $5}')
   commandline="tar cf - -C $dirname $basename | udp-sender --interface $netif --nokbd --min-receivers $count"
   screen -S rh -p 1 -X stuff "$commandline\n"
 
-  commandline="$dstpath"
-  # copy the file locally;
-  echo "Copying the file on local machine first"
-  # XXX local copy first, then udp-cast to avoir perf issues (?)
-  $REMOTE_RH_PATH send $partition $commandline $filepath > $RH_DIR/nohup.log 2>&1
-elif [ $cmd == "exec" ]
-then
-  commandline="$@"
-  nohup $REMOTE_RH_PATH exec $partition "$commandline" > $RH_DIR/nohup.log 2>&1 &
-elif [ $cmd == "restore" ]
-then
-  echo "RSTORE"
-
-  if [ -f $RH_DIR/$system.restore ]
-  then
-    rm $RH_DIR/$system.restore
-  fi
-
-  # XXX restore before we add the file(s)
-  #zcat $image |partclone.$type -r -o $chemin
-  #commandline="XXXzcat $image |XXXpartclone.$type -r -o $chemin"
-  nohup $REMOTE_RH_PATH restore $partition > $RH_DIR/nohup.log 2>&1 &
-elif [ $cmd == "save" ]
-then
-  # do not remove $partition.restore : maybe we'll touch the partition again
-
-  nohup $REMOTE_RH_PATH save $partition > $RH_DIR/nohup.log 2>&1 &
-fi
-
-# Monitor nohup.log in bottom left window
-if [ $cmd != "send" ]
-then
-  screen -S rh -p 1 -X stuff "tail -f $RH_DIR/nohup.log\n"
+  args_remote="$dstpath"
+  args_local="$dstpath $filepath"
+else
+  args_remote="$@"
+  args_local=$args_remote
 fi
 
 ####
@@ -247,7 +211,7 @@ do
   scp -q $REMOTE_RH_PATH $c:$REMOTE_RH_PATH > /dev/null
   ssh -q $c "chmod +x $REMOTE_RH_PATH"
 
-  ssh -q $c "nohup $REMOTE_RH_PATH $cmd $partition \"$commandline\" > $RH_DIR/nohup.log 2>&1 &" 2> /dev/null
+  ssh -q $c "nohup $REMOTE_RH_PATH $cmd $partition \"$args_remote\" > $RH_DIR/nohup.log 2>&1 &" 2> /dev/null
 
   # Something went wrong (probably a network issue)
   if [ $? -ne 0 ]
@@ -257,6 +221,31 @@ do
     exit 1
   fi
 done
+
+####
+# Exec command on master AFTER puppets (to let a chance to the master
+# to finish its duty (eg reboot or shutdown everybody)
+####
+if [ $cmd == "restore" ]
+then
+  if [ -f $RH_DIR/$system.restore ]
+  then
+    rm $RH_DIR/$system.restore
+  fi
+fi
+
+if [ $cmd == "exec" ]
+then
+  nohup $REMOTE_RH_PATH $cmd $partition "$args_local" > $RH_DIR/nohup.log 2>&1 &
+else
+  nohup $REMOTE_RH_PATH $cmd $partition $args_local > $RH_DIR/nohup.log 2>&1 &
+fi
+
+# Monitor nohup.log in bottom left window
+if [ $cmd != "send" ]
+then
+  screen -S rh -p 1 -X stuff "tail -f $RH_DIR/nohup.log\n"
+fi
 
 ####
 # wait for the puppets
