@@ -1,5 +1,7 @@
 #!/bin/bash
 
+PROXYIUT="http://proxy.iutcv.fr:3128"
+
 if [ $EUID -ne 0 ]
 then
   echo "Doit être exécuté en tant que root"
@@ -46,6 +48,15 @@ do
     ok=1
   fi
 done
+
+####
+# Proxy
+####
+echo "http_proxy=$PROXYIUT" >> /etc/bash.bashrc
+echo "https_proxy=$PROXYIUT" >> /etc/bash.bashrc
+echo "ftp_proxy=$PROXYIUT" >> /etc/bash.bashrc
+
+echo "Acquire::http::Proxy \"$PROXYIUT\";" > /etc/apt/apt.conf.d/80proxy
 
 ####
 # Paquetages
