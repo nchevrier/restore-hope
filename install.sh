@@ -8,9 +8,6 @@ then
   exit
 fi
 
-# cd /root
-cd
-
 ####
 # Requis : une carte branchée avec accès internet
 # TODO : tenter de configurer la carte si on détecte un câble branché ?
@@ -77,10 +74,10 @@ apt-get install -y openssh-server \
 ####
 
 # Pas de passphrase, écraser (y) la clé si elle existe déjà
-yes y | ssh-keygen -f /root/.ssh/id_rsa -N ""
+yes y | ssh-keygen -f ~/.ssh/id_rsa -N ""
 
 # Copie de la clé publique dans les clés autorisées pour la connexion SSH
-cp .ssh/id_rsa.pub .ssh/authorized_keys
+cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
 
 # Autoriser la connexion SSH avec le login root
 sed -i -E '/PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
@@ -115,7 +112,7 @@ cp admin/*.sh /usr/local/sbin/
 # Pas besoin, git préserve les droits d'exécution
 
 # Créer le répertoire de RH
-mkdir /root/rh2
+mkdir ~/rh2
 
 ####
 #
@@ -159,6 +156,22 @@ cat > /etc/systemd/system/getty\@.service.d/override.conf << EOF
 [Service]
 ExecStartPre=/bin/sh -c 'setleds -D +num < /dev/%I'
 EOF
+
+####
+# Grub
+####
+
+# GRUB_TIMEOUT
+sed -i '/GRUB_TIMEOUT=/s/^.*$/GRUB_TIMEOUT=300/' /etc/default/grub
+
+# GRUB_DISABLE_RECOVERY
+sed -i '/GRUB_DISABLE_RECOVERY=/s/^.*$/GRUB_DISABLE_RECOVERY=true/' /etc/default/grub
+
+# /etc/grub.d/10_linux GRUB_DISABLE_SUBMENU=y pas true :
+# [ "x${GRUB_DISABLE_SUBMENU}" != xy ];
+echo "GRUB_DISABLE_SUBMENU=y" >> /etc/default/grub
+
+update-grub
 
 # Exec at the very end, otherwise the rest of the script will not be executed
 #systemctl restart getty@tty1
