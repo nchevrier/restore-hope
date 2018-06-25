@@ -158,6 +158,14 @@ ExecStartPre=/bin/sh -c 'setleds -D +num < /dev/%I'
 EOF
 
 ####
+# Swap
+####
+# /dev/sda5 -> \/dev\/sda5 sinon sed couine
+swap=$(swapon -s | grep "^/dev" | awk '{print $1}' | sed 's/\//\\\//g')
+
+sed -i -E "/ swap /s/^UUID=[^ ]+/$swap/" /etc/fstab
+
+####
 # Grub
 ####
 
