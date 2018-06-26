@@ -163,11 +163,31 @@ EOF
 # /dev/sda5 -> \/dev\/sda5 sinon sed couine
 swap=$(swapon -s | grep "^/dev" | awk '{print $1}' | sed 's/\//\\\//g')
 
+# TODO : remplacer par l'UUID du swap du Debian etudiant (ou l'inverse)
 sed -i -E "/ swap /s/^UUID=[^ ]+/$swap/" /etc/fstab
 
 ####
 # Grub
+# sda4 windows10
+# sda5 windows2016
+# sda6 partage
+# sda7 swap
+# sda8 etudiant
+# sda9 rh
 ####
+
+# Anciens noms de cartes réseau (eth0, pas ens33 ou enp0s3)
+# https://www.itzgeek.com/how-tos/linux/debian/change-default-network-name-ens33-to-old-eth0-on-debian-9.html
+# Vérifier le nommage utilisé
+if ! grep net.ifnames=0 /etc/default/grub > /dev/null 2>&1
+then
+  # ajouter net.ifnames=0 biosdevname=0
+  # Sera appliqué au Debian RH mais aussi au Debian etudiant
+  sed -i '/GRUB_CMDLINE_LINUX/s/"$/ net.ifnames=0 biosdevname=0"/' /etc/default/grub
+
+  # ou update-grub
+  grub-mkconfig -o /boot/grub/grub.cfg
+fi
 
 # GRUB_TIMEOUT
 sed -i '/GRUB_TIMEOUT=/s/^.*$/GRUB_TIMEOUT=300/' /etc/default/grub
@@ -178,6 +198,13 @@ sed -i '/GRUB_DISABLE_RECOVERY=/s/^.*$/GRUB_DISABLE_RECOVERY=true/' /etc/default
 # /etc/grub.d/10_linux GRUB_DISABLE_SUBMENU=y pas true :
 # [ "x${GRUB_DISABLE_SUBMENU}" != xy ];
 echo "GRUB_DISABLE_SUBMENU=y" >> /etc/default/grub
+
+# La première entrée est Restore Hope (à vérifier)
+# rhpart=$(mount | grep 'on / type' | awk '{print $1}')
+
+# Deuxième entrée : Debian etudiant
+
+# Troisième entrée : Windows
 
 update-grub
 
