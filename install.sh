@@ -179,14 +179,15 @@ sed -i -E "/ swap /s/^UUID=[^ ]+/$swap/" /etc/fstab
 # Anciens noms de cartes réseau (eth0, pas ens33 ou enp0s3)
 # https://www.itzgeek.com/how-tos/linux/debian/change-default-network-name-ens33-to-old-eth0-on-debian-9.html
 # Vérifier le nommage utilisé
-if ! grep net.ifnames=0 /etc/default/grub > /dev/null 2>&1
+if ! grep "^GRUB_CMDLINE_LINUX=.*net.ifnames=0" /etc/default/grub > /dev/null 2>&1
 then
   # ajouter net.ifnames=0 biosdevname=0
   # Sera appliqué au Debian RH mais aussi au Debian etudiant
   sed -i '/GRUB_CMDLINE_LINUX/s/"$/ net.ifnames=0 biosdevname=0"/' /etc/default/grub
 
   # ou update-grub
-  grub-mkconfig -o /boot/grub/grub.cfg
+  # grub-mkconfig -o /boot/grub/grub.cfg
+  # Plus tard. 
 fi
 
 # GRUB_TIMEOUT
@@ -199,14 +200,33 @@ sed -i '/GRUB_DISABLE_RECOVERY=/s/^.*$/GRUB_DISABLE_RECOVERY=true/' /etc/default
 # [ "x${GRUB_DISABLE_SUBMENU}" != xy ];
 echo "GRUB_DISABLE_SUBMENU=y" >> /etc/default/grub
 
-# La première entrée est Restore Hope (à vérifier)
-# rhpart=$(mount | grep 'on / type' | awk '{print $1}')
+# Ne pas ajouter d'entrée "setup" pour EFI
+chmod a-x /etc/grub.d/30_uefi-firmware
 
-# Deuxième entrée : Debian etudiant
+# Supprimer /boot/grub/grub.cfg sur le Debian etudiant
+# (Déjà fait lors de l'installation du Debian etudiant)
+# grub-efi-amd64
 
-# Troisième entrée : Windows
-
+# Générer grub.cfg (Windows et Debian etudiant sont découverts et ajoutés
+# par os_prober. Dans le cas de Debian etudiant, si os_prober trouve un
+# grub.cfg sur cette partition, il ajoute les entrées de ce fichier
+# (ce qu'on ne veut pas)
 update-grub
+
+# Renommer les entrées crées dans grub.cfg
+
+# Restore Hope
+# Substitue toutes les occurences de '[^']*', même si la ligne
+# ne contient pas menuentry !
+#sed -i "0,/menuentry /s/'[^']*'/'Restauration'/" /boot/grub/grub.cfg
+# Si "menuentry" au lieu de "menuentry " : pas de substitution !
+sed -i "0,/menuentry /s/'[^']*Linux[^']*'/'Restauration'/" /boot/grub/grub.cfg
+
+# Windows
+sed -i "/menuentry /s/'Windows[^']*'/'Windows'/" /boot/grub/grub.cfg
+
+# Debian etudiant
+sed -i "/menuentry /s/'[^']*Linux[^']*sur[^']*'/'Debian Linux'/" /boot/grub/grub.cfg
 
 # Exec at the very end, otherwise the rest of the script will not be executed
 #systemctl restart getty@tty1
