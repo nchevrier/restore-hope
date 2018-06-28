@@ -31,24 +31,16 @@ echo "iface lo inet loopback" >> /etc/network/interfaces
 # Accepter le nouveau nommage des cartes (en) mais aussi l'ancien (eth)
 ethif=$(ip -o l show | awk -F': ' '{print $2}' | grep -E "^(eth|en)")
 
-ok=0
-
 for iface in $ethif
 do
-  ip a show dev $iface > /dev/null 2>&1
-
-  if [ $? -eq 0 ]
-  then
-    echo "auto $iface" >> /etc/network/interfaces
-    echo "iface $iface inet dhcp" >> /etc/network/interfaces
-
-    ok=1
-  fi
+  echo "auto $iface" >> /etc/network/interfaces
+  echo "iface $iface inet dhcp" >> /etc/network/interfaces
 done
 
 ####
 # Proxy
 ####
+
 echo "http_proxy=$PROXYIUT" >> /etc/bash.bashrc
 echo "https_proxy=$PROXYIUT" >> /etc/bash.bashrc
 echo "ftp_proxy=$PROXYIUT" >> /etc/bash.bashrc
@@ -187,7 +179,7 @@ then
 
   # ou update-grub
   # grub-mkconfig -o /boot/grub/grub.cfg
-  # Plus tard. 
+  # Plus tard.
 fi
 
 # GRUB_TIMEOUT
@@ -227,6 +219,9 @@ sed -i "/menuentry /s/'Windows[^']*'/'Windows'/" /boot/grub/grub.cfg
 
 # Debian etudiant
 sed -i "/menuentry /s/'[^']*Linux[^']*sur[^']*'/'Debian Linux'/" /boot/grub/grub.cfg
+
+echo "TODO : grub-install"
+# grub-install /dev/sda2
 
 # Exec at the very end, otherwise the rest of the script will not be executed
 #systemctl restart getty@tty1
