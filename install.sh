@@ -216,7 +216,7 @@ echo "TODO : grub-install"
 ####
 
 # Copier script dans /etc/... qui s'exécute au boot et se supprime
-cp init-interfaces.sh /usr/local/bin
+cp prep/init-interfaces.sh /usr/local/bin
 
 cat > /etc/systemd/system/init-interfaces.service << EOF
 [Unit]
@@ -230,5 +230,19 @@ ExecStart=/usr/local/bin/init-interfaces.sh
 [Install]
 WantedBy=multi-user.target
 EOF
+
+cp prep/ifup-hook.sh /sbin
+
+mkdir /etc/systemd/system/networking.service.d/
+cat > /etc/systemd/system/networking.service.d/override.conf << EOF
+[Service]
+ExecStart=
+ExecStart=/sbin/ifup-hook.sh start
+ExecStop=
+ExecStop=/sbin/ifup-hook.sh stop
+EOF
+
+# Reload les unités pour prendre en compte nos modifications
+systemctl daemon-reload
 
 systemctl enable init-interfaces.service
