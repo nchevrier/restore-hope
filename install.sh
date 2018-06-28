@@ -91,13 +91,13 @@ cp admin/*.sh /usr/local/sbin/
 # Pas besoin, git préserve les droits d'exécution
 
 # Créer le répertoire de RH
-mkdir ~/rh2
+mkdir -p ~/rh2
 
 ####
 #
 ####
 
-mkdir /etc/restore
+mkdir -p /etc/restore
 echo nbr_systemes:0 > /etc/restore/base_restore.conf
 
 ####
@@ -109,7 +109,7 @@ echo nbr_systemes:0 > /etc/restore/base_restore.conf
 # Bug : Cannot edit units if not on a tty
 #SYSTEMD_EDITOR=tee systemctl edit getty@tty1 << EOF
 
-mkdir /etc/systemd/system/getty\@tty1.service.d
+mkdir -p /etc/systemd/system/getty\@tty1.service.d
 
 cat > /etc/systemd/system/getty\@tty1.service.d/override.conf << EOF
 [Service]
@@ -129,7 +129,7 @@ EOF
 # Bug : Cannot edit units if not on a tty
 #SYSTEMD_EDITOR=tee systemctl edit getty@.service << EOF
 
-mkdir /etc/systemd/system/getty\@.service.d
+mkdir -p /etc/systemd/system/getty\@.service.d
 
 cat > /etc/systemd/system/getty\@.service.d/override.conf << EOF
 [Service]
@@ -236,7 +236,7 @@ EOF
 
 cp prep/ifup-hook.sh /sbin
 
-mkdir /etc/systemd/system/networking.service.d/
+mkdir -p /etc/systemd/system/networking.service.d/
 cat > /etc/systemd/system/networking.service.d/override.conf << EOF
 [Service]
 ExecStart=
