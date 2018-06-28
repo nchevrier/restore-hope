@@ -22,22 +22,6 @@ then
 fi
 
 ####
-# Configuration dynamique persistante pour toutes les cartes
-####
-
-echo "auto lo" > /etc/network/interfaces
-echo "iface lo inet loopback" >> /etc/network/interfaces
-
-# Accepter le nouveau nommage des cartes (en) mais aussi l'ancien (eth)
-ethif=$(ip -o l show | awk -F': ' '{print $2}' | grep -E "^(eth|en)")
-
-for iface in $ethif
-do
-  echo "auto $iface" >> /etc/network/interfaces
-  echo "iface $iface inet dhcp" >> /etc/network/interfaces
-done
-
-####
 # Proxy
 ####
 
@@ -225,3 +209,26 @@ echo "TODO : grub-install"
 
 # Exec at the very end, otherwise the rest of the script will not be executed
 #systemctl restart getty@tty1
+
+####
+# Configuration des interfaces au prochain reboot
+# P+VM
+####
+
+# Copier script dans /etc/... qui s'exécute au boot et se supprime
+cp init-interfaces.sh /usr/local/bin
+
+cat > /etc/systemd/system/init-interfaces.service << EOF
+[Unit]
+Description=Configuration du fichier interfaces au premier boot
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+ExecStart=/usr/local/bin/init-interfaces.sh
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable init-interfaces.service
