@@ -22,23 +22,10 @@ then
 fi
 
 ####
-# Proxy
-####
-
-# Effacer toute config de *_proxy
-sed -E -i '/(ht|f)tps?_proxy=/d' /etc/bash.bashrc
-
-echo "export http_proxy=$PROXYIUT" >> /etc/bash.bashrc
-echo "export https_proxy=$PROXYIUT" >> /etc/bash.bashrc
-echo "export ftp_proxy=$PROXYIUT" >> /etc/bash.bashrc
-
-echo "Acquire::http::Proxy \"$PROXYIUT\";" > /etc/apt/apt.conf.d/80proxy
-
-####
 # Paquetages
 ####
 
-apt-get update
+apt-get update -y
 apt-get install -y openssh-server \
                 socat \
                 beep \
@@ -121,22 +108,6 @@ EOF
 #sed -i --follow-symlinks "s/^ExecStart=.*$/ExecStart=$cmdline/" /etc/systemd/system/getty.target.wants/getty\@tty1.service
 
 ####
-# setleds
-####
-
-# systemd, pas init
-# https://wiki.archlinux.org/index.php/Activating_Numlock_on_Bootup#Using_a_separate_service
-# Bug : Cannot edit units if not on a tty
-#SYSTEMD_EDITOR=tee systemctl edit getty@.service << EOF
-
-mkdir -p /etc/systemd/system/getty\@.service.d
-
-cat > /etc/systemd/system/getty\@.service.d/override.conf << EOF
-[Service]
-ExecStartPre=/bin/sh -c 'setleds -D +num < /dev/%I'
-EOF
-
-####
 # Swap
 ####
 # /dev/sda5 -> \/dev\/sda5 sinon sed couine
@@ -146,7 +117,7 @@ swap=$(swapon -s | grep "^/dev" | awk '{print $1}' | sed 's/\//\\\//g')
 sed -i -E "/ swap /s/^UUID=[^ ]+/$swap/" /etc/fstab
 
 ####
-# Grub
+# Grub : préparation
 # sda4 windows10
 # sda5 windows2016
 # sda6 partage
@@ -182,14 +153,64 @@ echo "GRUB_DISABLE_SUBMENU=y" >> /etc/default/grub
 # Ne pas ajouter d'entrée "setup" pour EFI
 chmod a-x /etc/grub.d/30_uefi-firmware
 
-# Supprimer /boot/grub/grub.cfg sur le Debian etudiant
-# (Déjà fait lors de l'installation du Debian etudiant)
-# grub-efi-amd64
+####
+# Post install du Debian etudiant
+####
+
+# XXX on aura besoin du proxy !
+export https_proxy=$PROXYIUT
+wget --no-check-certificate https://github.com/brice-augustin/debian-etudiant/archive/master.zip
+
+unzip master.zip
+
+cp -r debian-etudiant-master/prep .
+pushd prep
+./masterprep.sh
+popd
+
+mountdir="/mnt/debian-etudiant"
+mkdir -p $mountdir
+
+# os-prober
+count=$(os-prober | grep linux | wc -l)
+if [ $count -ne 1 ]
+then
+  echo "Il existe plusieurs autres OS Linux sur le disque. Arrêt."
+  exit
+fi
+
+debianpart=$(os-prober | grep linux | cut -d ':' -f1)
+
+mount $debianpart $mountdir
+mount -t proc proc $mountdir/proc/
+mount --rbind /sys $mountdir/sys/
+mount --rbind /dev $mountdir/dev/
+
+mv debian-etudiant-master $mountdir/root
+
+chroot $mountdir /bin/bash -c "cd /root/debian-etudiant-master; ./postinstall.sh"
+
+# Copier le fichier de conf grub de RH sur le Debian etudiant
+cp /etc/default/grub $mountdir/etc/default
+
+# Génère une unique entrée (pour le Debian etudiant)
+# Ne pas ajouter d'entrée "setup" pour EFI
+# Ne pas prober les autres OS
+chroot $mountdir /bin/bash -c "apt-get install -y grub-efi-amd64 \
+    && chmod a-x /etc/grub.d/30_uefi-firmware \
+    && chmod a-x /etc/grub.d/30_os-prober \
+    && update-grub \
+    && cp /boot/grub/grub.cfg /root/grub.cfg \
+    && apt-get remove -y --purge grub* \
+    && mkdir -p /boot/grub \
+    && cp /root/grub.cfg /boot/grub"
+
+umount --recursive $mountdir
 
 # Générer grub.cfg (Windows et Debian etudiant sont découverts et ajoutés
 # par os_prober. Dans le cas de Debian etudiant, si os_prober trouve un
 # grub.cfg sur cette partition, il ajoute les entrées de ce fichier
-# (ce qu'on ne veut pas)
+# (normalement il n'y en aura qu'une)
 update-grub
 
 # Renommer les entrées crées dans grub.cfg
@@ -207,45 +228,16 @@ sed -i "/menuentry /s/'Windows[^']*'/'Windows'/" /boot/grub/grub.cfg
 # Debian etudiant
 sed -i "/menuentry /s/'[^']*Linux[^']*sur[^']*'/'Debian Linux'/" /boot/grub/grub.cfg
 
-echo "TODO : grub-install"
-# grub-install /dev/sda2
+# grub-install
+c=$(fdisk -l | grep EFI | wc -l)
+if [ $c -eq 1 ]
+then
+  efipart=$(fdisk -l | grep EFI | cut -d ' ' -f1)
+  grub-install $efipart
+else
+  echo "Il existe plusieurs partitions EFI."
+  echo "A vous de lancer grub-install sur la bonne."
+fi
 
 # Exec at the very end, otherwise the rest of the script will not be executed
 #systemctl restart getty@tty1
-
-####
-# Configuration des interfaces au prochain reboot
-# P+VM
-####
-
-# Copier script dans /etc/... qui s'exécute au boot et se supprime
-cp prep/init-interfaces.sh /usr/local/bin
-
-cat > /etc/systemd/system/init-interfaces.service << EOF
-[Unit]
-Description=Configuration du fichier interfaces au premier boot
-
-[Service]
-Type=oneshot
-RemainAfterExit=no
-ExecStart=/usr/local/bin/init-interfaces.sh
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-cp prep/ifup-hook.sh /sbin
-
-mkdir -p /etc/systemd/system/networking.service.d/
-cat > /etc/systemd/system/networking.service.d/override.conf << EOF
-[Service]
-ExecStart=
-ExecStart=/sbin/ifup-hook.sh start
-ExecStop=
-ExecStop=/sbin/ifup-hook.sh stop
-EOF
-
-# Reload les unités pour prendre en compte nos modifications
-systemctl daemon-reload
-
-systemctl enable init-interfaces.service
