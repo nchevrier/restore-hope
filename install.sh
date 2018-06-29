@@ -163,8 +163,7 @@ wget --no-check-certificate https://github.com/brice-augustin/debian-etudiant/ar
 
 unzip master.zip
 
-cp -r debian-etudiant-master/prep .
-pushd prep
+pushd debian-etudiant-master/prep
 ./masterprep.sh
 popd
 
