@@ -163,14 +163,13 @@ wget --no-check-certificate https://github.com/brice-augustin/debian-etudiant/ar
 
 unzip master.zip
 
-pushd debian-etudiant-master/prep
-./masterprep.sh
-popd
+# Faire une sauvegarde des scripts de préparation du master (pour RH, plus tard)
+cp -r debian-etudiant-master/prep .
 
 mountdir="/mnt/debian-etudiant"
 mkdir -p $mountdir
 
-# os-prober
+# Utiliser os-prober pour trouver le Debian etudiant
 count=$(os-prober | grep linux | wc -l)
 if [ $count -ne 1 ]
 then
@@ -180,6 +179,7 @@ fi
 
 debianpart=$(os-prober | grep linux | cut -d ':' -f1)
 
+# Monter le Debian etudiant
 mount $debianpart $mountdir
 mount -t proc proc $mountdir/proc/
 mount --rbind /sys $mountdir/sys/
@@ -187,14 +187,15 @@ mount --rbind /dev $mountdir/dev/
 
 mv debian-etudiant-master $mountdir/root
 
+# Exécuter postinstall dans le chroot
 chroot $mountdir /bin/bash -c "cd /root/debian-etudiant-master; ./postinstall.sh"
 
 # Copier le fichier de conf grub de RH sur le Debian etudiant
 cp /etc/default/grub $mountdir/etc/default
 
-# Génère une unique entrée (pour le Debian etudiant)
-# Ne pas ajouter d'entrée "setup" pour EFI
-# Ne pas prober les autres OS
+# Génère un grub.cfg avec une unique entrée (pour le Debian etudiant) :
+# - Ne pas ajouter d'entrée "setup" pour EFI
+# - Ne pas prober les autres OS
 chroot $mountdir /bin/bash -c "apt-get install -y grub-efi-amd64 \
     && chmod a-x /etc/grub.d/30_uefi-firmware \
     && chmod a-x /etc/grub.d/30_os-prober \
@@ -206,28 +207,31 @@ chroot $mountdir /bin/bash -c "apt-get install -y grub-efi-amd64 \
 
 umount --recursive $mountdir
 
+####
+# Grub finalisation
+####
+
 # Générer grub.cfg (Windows et Debian etudiant sont découverts et ajoutés
 # par os_prober. Dans le cas de Debian etudiant, si os_prober trouve un
 # grub.cfg sur cette partition, il ajoute les entrées de ce fichier
 # (normalement il n'y en aura qu'une)
 update-grub
 
-# Renommer les entrées crées dans grub.cfg
-
-# Restore Hope
+# Renommer les entrées crées dans grub.cfg :
+# 1) Restore Hope
 # Substitue toutes les occurences de '[^']*', même si la ligne
 # ne contient pas menuentry !
 #sed -i "0,/menuentry /s/'[^']*'/'Restauration'/" /boot/grub/grub.cfg
 # Si "menuentry" au lieu de "menuentry " : pas de substitution !
 sed -i "0,/menuentry /s/'[^']*Linux[^']*'/'Restauration'/" /boot/grub/grub.cfg
 
-# Windows
+# 2) Windows
 sed -i "/menuentry /s/'Windows[^']*'/'Windows'/" /boot/grub/grub.cfg
 
-# Debian etudiant
+# 3) Debian etudiant
 sed -i "/menuentry /s/'[^']*Linux[^']*sur[^']*'/'Debian Linux'/" /boot/grub/grub.cfg
 
-# grub-install
+# grub-install sur la partition EFI
 c=$(fdisk -l | grep EFI | wc -l)
 if [ $c -eq 1 ]
 then
@@ -237,6 +241,14 @@ else
   echo "Il existe plusieurs partitions EFI."
   echo "A vous de lancer grub-install sur la bonne."
 fi
+
+####
+# Finalisation
+# (proxy, interfaces, ifup-hook, setleds)
+####
+pushd prep
+./masterprep.sh
+popd
 
 # Exec at the very end, otherwise the rest of the script will not be executed
 #systemctl restart getty@tty1
