@@ -185,19 +185,23 @@ mount -t proc proc $mountdir/proc/
 mount --rbind /sys $mountdir/sys/
 mount --rbind /dev $mountdir/dev/
 
-mv debian-etudiant-master $mountdir/root
+# mv ne fonctionne pas entre deux partitions
+cp -r debian-etudiant-master $mountdir/root
 
 # Exécuter postinstall dans le chroot
 chroot $mountdir /bin/bash -c "cd /root/debian-etudiant-master; ./postinstall.sh"
 
+# Installer grub avant de copier default/grub, sinon apt couine
+# (demande de choisir entre les deux versions de fichiers)
+chroot $mountdir /bin/bash -c "apt-get install -y grub-efi-amd64"
+
 # Copier le fichier de conf grub de RH sur le Debian etudiant
 cp /etc/default/grub $mountdir/etc/default
 
-# Génère un grub.cfg avec une unique entrée (pour le Debian etudiant) :
-# - Ne pas ajouter d'entrée "setup" pour EFI
-# - Ne pas prober les autres OS
-chroot $mountdir /bin/bash -c "apt-get install -y grub-efi-amd64 \
-    && chmod a-x /etc/grub.d/30_uefi-firmware \
+# Génère une unique entrée (pour le Debian etudiant)
+# Ne pas ajouter d'entrée "setup" pour EFI
+# Ne pas prober les autres OS
+chroot $mountdir /bin/bash -c "chmod a-x /etc/grub.d/30_uefi-firmware \
     && chmod a-x /etc/grub.d/30_os-prober \
     && update-grub \
     && cp /boot/grub/grub.cfg /root/grub.cfg \
@@ -205,6 +209,7 @@ chroot $mountdir /bin/bash -c "apt-get install -y grub-efi-amd64 \
     && mkdir -p /boot/grub \
     && cp /root/grub.cfg /boot/grub"
 
+# --lazy si démontage refusé à cause d'un fichier en cours d'utilisation (systemd)
 umount --recursive $mountdir
 
 ####
