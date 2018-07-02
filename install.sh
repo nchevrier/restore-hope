@@ -179,6 +179,7 @@ mount --rbind /dev $mountdir/dev/
 mount --bind /dev/pts $mountdir/dev/pts
 
 # resolv.conf de Debian etudiant pointe sur un fichier du Network Manager
+rm -rf $mountdir/etc/resolv.conf
 cp /etc/resolv.conf $mountdir/etc
 
 # mv ne fonctionne pas entre deux partitions
@@ -206,7 +207,8 @@ chroot $mountdir /bin/bash -c "chmod a-x /etc/grub.d/30_uefi-firmware \
     && cp /root/grub.cfg /boot/grub"
 
 # --lazy si démontage refusé à cause d'un fichier en cours d'utilisation (systemd)
-umount --recursive $mountdir
+# -- recursive
+umount --lazy $mountdir
 
 ####
 # Grub finalisation
