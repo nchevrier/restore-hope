@@ -175,6 +175,8 @@ mount $debianpart $mountdir
 mount -t proc proc $mountdir/proc/
 mount --rbind /sys $mountdir/sys/
 mount --rbind /dev $mountdir/dev/
+# Eviter des warnings
+mount --bind /dev/pts $mountdir/dev/pts
 
 # resolv.conf de Debian etudiant pointe sur un fichier du Network Manager
 cp /etc/resolv.conf $mountdir/etc
