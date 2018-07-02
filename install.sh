@@ -108,15 +108,6 @@ EOF
 #sed -i --follow-symlinks "s/^ExecStart=.*$/ExecStart=$cmdline/" /etc/systemd/system/getty.target.wants/getty\@tty1.service
 
 ####
-# Swap
-####
-# /dev/sda5 -> \/dev\/sda5 sinon sed couine
-swap=$(swapon -s | grep "^/dev" | awk '{print $1}' | sed 's/\//\\\//g')
-
-# TODO : remplacer par l'UUID du swap du Debian etudiant (ou l'inverse)
-sed -i -E "/ swap /s/^UUID=[^ ]+/$swap/" /etc/fstab
-
-####
 # Grub : préparation
 # sda4 windows10
 # sda5 windows2016
@@ -161,7 +152,7 @@ chmod a-x /etc/grub.d/30_uefi-firmware
 export https_proxy=$PROXYIUT
 wget --no-check-certificate https://github.com/brice-augustin/debian-etudiant/archive/master.zip
 
-unzip master.zip
+unzip -o master.zip
 
 # Faire une sauvegarde des scripts de préparation du master (pour RH, plus tard)
 cp -r debian-etudiant-master/prep .
@@ -184,6 +175,9 @@ mount $debianpart $mountdir
 mount -t proc proc $mountdir/proc/
 mount --rbind /sys $mountdir/sys/
 mount --rbind /dev $mountdir/dev/
+
+# resolv.conf de Debian etudiant pointe sur un fichier du Network Manager
+cp /etc/resolv.conf $mountdir/etc
 
 # mv ne fonctionne pas entre deux partitions
 cp -r debian-etudiant-master $mountdir/root
