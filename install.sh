@@ -1,6 +1,11 @@
 #!/bin/bash
 
-PROXYIUT="http://proxy.iutcv.fr:3128"
+export PROXYIUT="proxy.iutcv.fr"
+export PROXYIUT_PORT="3128"
+
+# On aura besoin du proxy pendant les installations !
+export https_proxy=http://$PROXYIUT:$PROXYIUT_PORT
+export http_proxy=http://$PROXYIUT:$PROXYIUT_PORT
 
 if [ $EUID -ne 0 ]
 then
@@ -100,6 +105,7 @@ mkdir -p /etc/systemd/system/getty\@tty1.service.d
 
 cat > /etc/systemd/system/getty\@tty1.service.d/override.conf << EOF
 [Service]
+ExecStartPre=/bin/sh -c 'setleds -D +num < /dev/%I'
 ExecStart=
 ExecStart=-/sbin/agetty --noclear %I $TERM -n -i -l /usr/local/sbin/restore2.sh
 EOF
@@ -148,8 +154,6 @@ chmod a-x /etc/grub.d/30_uefi-firmware
 # Post install du Debian etudiant
 ####
 
-# XXX on aura besoin du proxy !
-export https_proxy=$PROXYIUT
 wget --no-check-certificate https://github.com/brice-augustin/debian-etudiant/archive/master.zip
 
 unzip -o master.zip
