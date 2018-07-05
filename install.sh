@@ -176,7 +176,7 @@ fi
 
 debianpart=$(os-prober | grep linux | cut -d ':' -f1)
 
-rh_syst_count=$((rh_syst_count + ))
+rh_syst_count=$((rh_syst_count + 1))
 echo "$rh_syst_count:Linux:$debianpart:/home/restore/img_debian.pcl.gz:ext4" >> /etc/restore/base_restore.conf
 
 # Monter le Debian etudiant
@@ -266,10 +266,10 @@ do
   then
     mount $p $mountdir
 
-    rh_syst_count=$((rh_syst_count + ))
+    rh_syst_count=$((rh_syst_count + 1))
     if [ -d $mountdir/Windows ]
     then
-      
+
       if grep "WINDOWS SERVER" $mountdir/Windows/System32/license.rtf > /dev/null 2>&1
       then
         echo "$rh_syst_count:Windows Server:$p:/home/restore/img_win16.pcl.gz:ext4" >> /etc/restore/base_restore.conf
