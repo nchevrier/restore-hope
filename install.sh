@@ -91,7 +91,7 @@ mkdir -p ~/rh2
 
 mkdir -p /etc/restore
 mkdir -p /home/restore/
-echo nbr_systemes:0 > /etc/restore/base_restore.conf
+echo -n "" > /etc/restore/base_restore.conf
 rh_syst_count=0
 
 ####
@@ -284,6 +284,7 @@ do
   fi
 done
 
+echo "nbr_systemes:$rh_syst_count" >> /etc/restore/base_restore.conf
 
 ####
 # Finalisation
