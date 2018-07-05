@@ -213,7 +213,10 @@ chroot $mountdir /bin/bash -c "chmod a-x /etc/grub.d/30_uefi-firmware \
     && cp /boot/grub/grub.cfg /root/grub.cfg \
     && apt-get remove -y --purge grub* \
     && mkdir -p /boot/grub \
-    && cp /root/grub.cfg /boot/grub"
+    && mv /root/grub.cfg /boot/grub"
+
+# Supprimer les scripts sur le Debian etudiant
+rm -rf $mountdir/root/debian-etudiant-master
 
 # --lazy si démontage refusé à cause d'un fichier en cours d'utilisation (systemd)
 # -- recursive
