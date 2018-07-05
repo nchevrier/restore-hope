@@ -123,7 +123,7 @@ do
 	then
 		chemin="0"
 		image="0"
-		type= "0"
+		type="0"
 
 		chemin="$(grep "^$num:" $base_r | cut -d: -f3)"
 		image="$(grep "^$num:" $base_r | cut -d: -f4)"
