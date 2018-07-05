@@ -90,7 +90,9 @@ mkdir -p ~/rh2
 ####
 
 mkdir -p /etc/restore
+mkdir -p /home/restore/
 echo nbr_systemes:0 > /etc/restore/base_restore.conf
+rh_syst_count=0
 
 ####
 # Lancer restore2.sh sur tty au démarrage
@@ -174,6 +176,9 @@ fi
 
 debianpart=$(os-prober | grep linux | cut -d ':' -f1)
 
+rh_syst_count=$((rh_syst_count + ))
+echo "$rh_syst_count:Linux:$debianpart:/home/restore/img_debian.pcl.gz:ext4" >> /etc/restore/base_restore.conf
+
 # Monter le Debian etudiant
 mount $debianpart $mountdir
 mount -t proc proc $mountdir/proc/
@@ -248,6 +253,37 @@ else
   echo "Il existe plusieurs partitions EFI."
   echo "A vous de lancer grub-install sur la bonne."
 fi
+
+####
+# base_restore.conf
+####
+mountdir="/mnt/windows"
+mkdir -p $mountdir
+
+for p in $(fdisk -l | grep Microsoft | cut -d ' ' -f 1)
+do
+  if blkid $p | grep ntfs > /dev/null 2>&1
+  then
+    mount $p $mountdir
+
+    rh_syst_count=$((rh_syst_count + ))
+    if [ -d $mountdir/Windows ]
+    then
+      
+      if grep "WINDOWS SERVER" $mountdir/Windows/System32/license.rtf > /dev/null 2>&1
+      then
+        echo "$rh_syst_count:Windows Server:$p:/home/restore/img_win16.pcl.gz:ext4" >> /etc/restore/base_restore.conf
+      else
+        echo "$rh_syst_count:Windows 10:$p:/home/restore/img_win10.pcl.gz:ext4" >> /etc/restore/base_restore.conf
+      fi
+    else
+      echo "$rh_syst_count:DATA:$p:/home/restore/img_data.pcl.gz:ext4" >> /etc/restore/base_restore.conf
+    fi
+
+    umount $mountdir
+  fi
+done
+
 
 ####
 # Finalisation
