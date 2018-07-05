@@ -156,7 +156,7 @@ chmod a-x /etc/grub.d/30_uefi-firmware
 # Post install du Debian etudiant
 ####
 
-wget --no-check-certificate https://github.com/brice-augustin/debian-etudiant/archive/master.zip
+wget --no-check-certificate https://github.com/brice-augustin/debian-etudiant/archive/master.zip -O master.zip
 
 unzip -o master.zip
 
