@@ -58,7 +58,7 @@ do
 
 	if [ -f $mountdir/tainted -o -f $mountdir/taint/tainted ]
 	then
-		echo -e "${RED} !{NC}"
+		echo -e "${RED} !${NC}"
 	else
 		echo ""
 	fi
