@@ -25,6 +25,9 @@ num="0"
 j=1
 fin_img="000"
 
+mountdir=/mnt/os
+mkdir -p $mountdir
+
 clear
 
 echo ""
@@ -42,9 +45,25 @@ echo "	Restore Hope - Restauration automatique v1.93 (23/06/2018)"
 echo "	IUT R/T Vitry - Anthony Delaplace, Brice Augustin, Benoit Albert et Coumaravel Soupramanien"
 echo ""
 echo "	Systèmes disponibles :"
+
 while [ $j -le $nbr_sys ]
 do
-	echo "		$(grep "^$j:" $base_r | cut -d: -f1)   $(grep "^$j:" $base_r | cut -d: -f2)"
+	partition="$(grep "^$j:" $base_r | cut -d: -f3)"
+	num=$(grep "^$j:" $base_r | cut -d: -f1)
+	label=$(grep "^$j:" $base_r | cut -d: -f2)
+
+	mount $partition $mountdir
+
+	echo -n "		$num   $label"
+
+	if [ -f $mountdir/tainted -o -f $mountdir/taint/tainted ]
+	then
+		echo -e "${RED} !{NC}"
+	else
+		echo ""
+	fi
+
+	umount $partition
 	j=`expr $j + 1`
 done
 
