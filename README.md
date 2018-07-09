@@ -11,8 +11,8 @@ Administration massive des postes
 
 - Installation
 
-Prérequis : une installation Debian ("etudiant") avec taskset GNOME et Utilitaires de base 
-+ installation Debian ("RH") sans aucun taskset. 
+Prérequis : une installation Debian ("etudiant") avec taskset GNOME et Utilitaires de base
++ installation Debian ("RH") sans aucun taskset.
 
 Dans un terminal root sur la Debian RH :
 
