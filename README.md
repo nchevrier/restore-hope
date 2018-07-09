@@ -17,14 +17,11 @@ Prérequis :
 
 Dans un terminal root sur la Debian RH :
 
-`export https_proxy=http://proxy.iutcv.fr`
-
-`apt-get install wget unzip`
-
-`wget --no-check-certificate https://github.com/brice-augustin/restore-hope/archive/master.zip`
-
-`unzip master.zip`
-
-`cd restore-hope-master`
-
-`./install.sh`
+```
+export https_proxy=http://proxy.iutcv.fr
+apt-get install wget unzip
+wget --no-check-certificate https://github.com/brice-augustin/restore-hope/archive/master.zip
+unzip master.zip
+cd restore-hope-master
+./install.sh
+```
