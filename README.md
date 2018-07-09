@@ -11,6 +11,11 @@ Administration massive des postes
 
 - Installation
 
+Prérequis : une installation Debian ("etudiant") avec taskset GNOME et Utilitaires de base 
++ installation Debian ("RH") sans aucun taskset. 
+
+Dans un terminal root sur la Debian RH :
+
 `export https_proxy=http://proxy.iutcv.fr`
 
 `apt-get install wget unzip`
