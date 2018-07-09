@@ -1,18 +1,19 @@
 # restore-hope
-Système de gestion des salles de TP
 
-- Pour les étudiants :
+Gestion des salles de TP Réseaux
 
-Restauration à la demande de n'importe quel OS
+## Utilisation
 
-- Pour les techs/profs :
+- Pour les étudiants : restauration à la demande de n'importe quel OS
 
-Administration massive des postes
+- Pour les techs/profs : administration massive des postes
 
-- Installation
+## Installation
 
-Prérequis : une installation Debian ("etudiant") avec taskset GNOME et Utilitaires de base
-et une installation Debian ("RH") sans aucun taskset.
+Prérequis :
+
+- Une installation Debian (*etudiant*) avec tasksel `GNOME` et `Utilitaires de base`
+- Une installation Debian (*RH*) sans aucun tasksel
 
 Dans un terminal root sur la Debian RH :
 
