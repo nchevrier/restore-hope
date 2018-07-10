@@ -22,8 +22,8 @@ function cleanup
     then
       echo "Unmounting $RH_MOUNTDIR"
 
-      # -l (lazy umount on older systems)
-      umount --recursive $RH_MOUNTDIR
+      # --recursive (on older systems?)
+      umount --lazy $RH_MOUNTDIR
     fi
   fi
 
