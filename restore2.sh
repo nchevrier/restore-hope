@@ -80,7 +80,7 @@ then
 	rm $RH_DIR/puppetmode
 fi
 
-socat UDP-LISTEN:24000 EXEC:$RH_BIN_DIR/puppet.sh &
+$RH_BIN_DIR/wait-master.sh &
 
 ###
 # End part 1
@@ -131,7 +131,7 @@ do
 		rm $RH_DIR/puppetmode
 
 		# restart socat
-		socat UDP-LISTEN:24000 EXEC:$RH_BIN_DIR/puppet.sh &
+		$RH_BIN_DIR/wait-master.sh &
 		# Wait infinitely
 		#sleep infinity
 	fi
