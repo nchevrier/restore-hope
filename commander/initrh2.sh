@@ -20,11 +20,26 @@
 
 #screen -S rh -p 1 -X stuff '\n'
 
-echo "Waiting for clients. Press Enter when ready."
+echo "Waiting for an IP address "
 
-netif=$(ip route | grep default | awk '{print $5}')
+while true
+do
+  netif=$(ip route | grep default | awk '{print $5}')
+
+  if [ "$netif" != "" ]
+  then
+    break
+  fi
+
+  echo -n .
+  sleep 2
+done
+
+echo ""
+
 netip=$(ip -o -4 a list $netif | awk '{print $4}' | cut -d '/' -f1)
 
+echo "Waiting for clients. Press Enter when ready."
 echo "netif $netif $netip"
 
 if [ -d $RH_DIR/puppets ]

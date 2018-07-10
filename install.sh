@@ -85,6 +85,9 @@ cp admin/*.sh /usr/local/sbin/
 # Créer le répertoire de RH
 mkdir -p ~/rh2
 
+# Créer le répertoire pour monter une clé USB
+mkdir -p /mnt/usb
+
 ####
 #
 ####
