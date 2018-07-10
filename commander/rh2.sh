@@ -207,9 +207,9 @@ echo "Starting command on each puppet"
 for c in $clientip
 do
   # Can remove next two lines in prod
-  echo -e "${RED}Remove next two lines of code${NC}"
-  scp -q $REMOTE_RH_PATH $c:$REMOTE_RH_PATH > /dev/null
-  ssh -q $c "chmod +x $REMOTE_RH_PATH"
+  #echo -e "${RED}Remove next two lines of code${NC}"
+  #scp -q $REMOTE_RH_PATH $c:$REMOTE_RH_PATH > /dev/null
+  #ssh -q $c "chmod +x $REMOTE_RH_PATH"
 
   ssh -q $c "nohup $REMOTE_RH_PATH $cmd $partition \"$args_remote\" > $RH_DIR/nohup.log 2>&1 &" 2> /dev/null
 
