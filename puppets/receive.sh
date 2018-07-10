@@ -23,7 +23,14 @@ function cleanup
       echo "Unmounting $RH_MOUNTDIR"
 
       # --recursive (on older systems?)
-      umount --lazy $RH_MOUNTDIR
+      # A éviter car impossible de rebooter après (arrêt sur Reached Target Shutdown)
+      # umount --lazy $RH_MOUNTDIR
+
+      # https://unix.stackexchange.com/questions/61885/how-to-unmount-a-formerly-chrootd-filesystem
+      umount $RH_MOUNTDIR/dev/
+      umount $RH_MOUNTDIR/proc/
+      umount $RH_MOUNTDIR/sys/
+      umount $RH_MOUNTDIR
     fi
   fi
 
@@ -68,6 +75,10 @@ function report
     masterip=$(echo $SSH_CLIENT | awk '{print $1}')
     netif=$(ip route | grep default | awk '{print $5}')
     netip=$(ip -o -4 a list $netif | awk '{print $4}' | cut -d '/' -f1)
+    # Attention -q peut masquer des erreurs
+    # Exemple "ssh_exchange_identification: read: connection reset by peer"
+    # quand sshd est submergé de requêtes et en refuse certaines
+    # (synchro des puppets après un udpcast)
     scp -q $RH_DIR/nohup.log $masterip:$RH_DIR/puppets/$netip.nohup
     # 2> /dev/null
   else
@@ -205,9 +216,9 @@ then
     fi
 
     # http://shallowsky.com/blog/tags/chroot/
-    mount -t proc proc $RH_MOUNTDIR/proc/
-    mount --rbind /sys $RH_MOUNTDIR/sys/
-    mount --rbind /dev $RH_MOUNTDIR/dev/
+    mount --bind /dev $RH_MOUNTDIR/dev/
+    mount --bind /proc $RH_MOUNTDIR/proc/
+    mount --bind /sys $RH_MOUNTDIR/sys/
 
     tmpfile=$(mktemp)
     cp $RH_MOUNTDIR/etc/resolv.conf $tmpfile
@@ -279,6 +290,10 @@ then
 
     udp-receiver --interface $netif --nokbd | tar xC $fullpath
     rh_cmd_res=$?
+
+    # Retard aléatoire pour éviter synchro parfaite des puppets,
+    # ce qui pousse sshd à refuser des connexions
+    sleep $((RANDOM % 5)).$((RANDOM % 100))
   else
     echo "local cp"
     cp -r $localfile $fullpath
