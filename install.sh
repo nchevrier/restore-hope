@@ -275,12 +275,12 @@ do
 
       if grep "WINDOWS SERVER" $mountdir/Windows/System32/license.rtf > /dev/null 2>&1
       then
-        echo "$rh_syst_count:Windows Server:$p:/home/restore/img_win16.pcl.gz:ext4" >> /etc/restore/base_restore.conf
+        echo "$rh_syst_count:Windows Server:$p:/home/restore/img_win16.pcl.gz:ntfs" >> /etc/restore/base_restore.conf
       else
-        echo "$rh_syst_count:Windows 10:$p:/home/restore/img_win10.pcl.gz:ext4" >> /etc/restore/base_restore.conf
+        echo "$rh_syst_count:Windows 10:$p:/home/restore/img_win10.pcl.gz:ntfs" >> /etc/restore/base_restore.conf
       fi
     else
-      echo "$rh_syst_count:DATA:$p:/home/restore/img_data.pcl.gz:ext4" >> /etc/restore/base_restore.conf
+      echo "$rh_syst_count:DATA:$p:/home/restore/img_data.pcl.gz:ntfs" >> /etc/restore/base_restore.conf
     fi
 
     umount $mountdir
@@ -299,3 +299,10 @@ popd
 
 # Exec at the very end, otherwise the rest of the script will not be executed
 #systemctl restart getty@tty1
+
+echo "Installation terminée."
+echo "Ne pas démarrer Debian etudiant et Restore Hope avant de remonter le master."
+
+# Si c'est le cas, sur le Linux qui a été démarré :
+# systemctl enable init-interfaces.service
+# systemctl daemon-reload
