@@ -25,8 +25,8 @@ num="0"
 j=1
 fin_img="000"
 
-mountdir=/mnt/os
-mkdir -p $mountdir
+MOUNTDIR=/mnt/os
+mkdir -p $MOUNTDIR
 
 clear
 
@@ -52,11 +52,11 @@ do
 	num=$(grep "^$j:" $base_r | cut -d: -f1)
 	label=$(grep "^$j:" $base_r | cut -d: -f2)
 
-	mount $partition $mountdir
+	mount $partition $MOUNTDIR
 
 	echo -n "		$num   $label"
 
-	if [ -f $mountdir/tainted -o -f $mountdir/taint/tainted ]
+	if [ -f $MOUNTDIR/tainted -o -f $MOUNTDIR/taint/tainted ]
 	then
 		echo -e "${RED} !${NC}"
 	else
@@ -140,19 +140,24 @@ do
 	# user pressed a key; process and exit
 	if [ $read_result -eq 0 -a "$masterip" == "" ]
 	then
-		chemin="0"
-		image="0"
-		type="0"
-
-		chemin="$(grep "^$num:" $base_r | cut -d: -f3)"
+		partition="$(grep "^$num:" $base_r | cut -d: -f3)"
 		image="$(grep "^$num:" $base_r | cut -d: -f4)"
 		type="$(grep "^$num:" $base_r | cut -d: -f5)"
 
-		if [ $chemin != "0" -a $image != "0" -a $num != "0" -a $? -eq 0 ]
+		if [ $partition != "0" -a $image != "0" -a $num != "0" -a $? -eq 0 ]
 		then
-			zcat $image |partclone.$type -r -o $chemin && init 0
-			#	partimage restore -b -f1 $chemin $image.$fin_img
+			zcat $image |partclone.$type -r -o $partition && init 0
+			#	partimage restore -b -f1 $partition $image.$fin_img
+
+			# Effacer l'indicateur de restauration
+			# (juste au cas où on l'a oublié sur le master)
+			mount $partition $MOUNTDIR
+			[ -f $MOUNTDIR/tainted ] && rm $MOUNTDIR/tainted
+			[ -f $MOUNTDIR/taint/tainted ] && rm $MOUNTDIR/taint/tainted
+			umount $MOUNTDIR
+
 			sleep 5
+
 			exit 0
 		else
 			echo ""
