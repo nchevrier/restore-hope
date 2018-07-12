@@ -146,7 +146,7 @@ do
 
 		if [ $partition != "0" -a $image != "0" -a $num != "0" -a $? -eq 0 ]
 		then
-			zcat $image |partclone.$type -r -o $partition && init 0
+			zcat $image |partclone.$type -r -o $partition
 			#	partimage restore -b -f1 $partition $image.$fin_img
 
 			# Effacer l'indicateur de restauration
@@ -158,7 +158,7 @@ do
 
 			sleep 5
 
-			exit 0
+			init 0
 		else
 			echo ""
 
