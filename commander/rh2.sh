@@ -107,9 +107,9 @@ fi
 
 if [ $cmd == "script" ]
 then
-  $0 send $system $3 /tmp
-  $0 exec $system "chmod +x /tmp/$3"
-  $0 exec $system "/tmp/$3"
+  $0 send $2 $3 /tmp
+  $0 exec $2 "chmod +x /tmp/${3##*/}"
+  $0 exec $2 "/tmp/${3##*/}"
   exit
 fi
 

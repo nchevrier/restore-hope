@@ -40,6 +40,9 @@ apt-get install -y openssh-server \
                 ntfs-3g \
                 partclone
 
+# Pour nettoyage après chroot. Désinstaller après ?
+apt-get install -y lsof
+
 ####
 # SSH
 ####
@@ -227,6 +230,12 @@ rm -rf $mountdir/root/debian-etudiant-master
 # Ne pas utiliser : freeze le reboot suivant (pourquoi ?)
 # umount --lazy $mountdir
 # https://unix.stackexchange.com/questions/61885/how-to-unmount-a-formerly-chrootd-filesystem
+umount $mountdir/dev/pts
+# Toujours une erreur à cause de /dev/null utilisé par des process !
+# for pid in $(lsof | grep $mountdir/dev | awk '{print $2}' | sort | uniq)
+# do
+#   kill $pid
+# done
 umount $mountdir/dev/
 umount $mountdir/proc/
 umount $mountdir/sys/
