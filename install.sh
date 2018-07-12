@@ -184,9 +184,10 @@ echo "$rh_syst_count:Linux:$debianpart:/home/restore/img_debian.pcl.gz:ext4" >> 
 
 # Monter le Debian etudiant
 mount $debianpart $mountdir
-mount -t proc proc $mountdir/proc/
-mount --rbind /sys $mountdir/sys/
-mount --rbind /dev $mountdir/dev/
+# http://shallowsky.com/blog/tags/chroot/
+mount --bind /dev $mountdir/dev/
+mount --bind /proc $mountdir/proc/
+mount --bind /sys $mountdir/sys/
 # Eviter des warnings
 mount --bind /dev/pts $mountdir/dev/pts
 
@@ -223,7 +224,13 @@ rm -rf $mountdir/root/debian-etudiant-master
 
 # --lazy si démontage refusé à cause d'un fichier en cours d'utilisation (systemd)
 # -- recursive
-umount --lazy $mountdir
+# Ne pas utiliser : freeze le reboot suivant (pourquoi ?)
+# umount --lazy $mountdir
+# https://unix.stackexchange.com/questions/61885/how-to-unmount-a-formerly-chrootd-filesystem
+umount $mountdir/dev/
+umount $mountdir/proc/
+umount $mountdir/sys/
+umount $mountdir
 
 ####
 # Grub finalisation
