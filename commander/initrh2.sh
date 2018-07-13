@@ -39,8 +39,9 @@ echo ""
 
 netip=$(ip -o -4 a list $netif | awk '{print $4}' | cut -d '/' -f1)
 
-echo "Waiting for clients. Press Enter when ready."
 echo "netif $netif $netip"
+
+echo "Waiting for clients. Press Enter when ready."
 
 if [ -d $RH_DIR/puppets ]
 then
