@@ -41,7 +41,7 @@ echo ""
 echo ""
 echo ""
 
-echo "	Restore Hope - Restauration automatique v1.93 (23/06/2018)"
+echo "	Restore Hope - Restauration automatique v1.95 (13/07/2018)"
 echo "	IUT R/T Vitry - Anthony Delaplace, Brice Augustin, Benoit Albert et Coumaravel Soupramanien"
 echo ""
 echo "	Systèmes disponibles :"
@@ -89,7 +89,7 @@ $RH_BIN_DIR/wait-master.sh &
 while true
 do
 
-	read -t 5 num
+	read -t 5 user_input
 
 	read_result=$?
 
@@ -140,6 +140,7 @@ do
 	# user pressed a key; process and exit
 	if [ $read_result -eq 0 -a "$masterip" == "" ]
 	then
+		num=${user_input%[rc]}
 		partition="$(grep "^$num:" $base_r | cut -d: -f3)"
 		image="$(grep "^$num:" $base_r | cut -d: -f4)"
 		type="$(grep "^$num:" $base_r | cut -d: -f5)"
@@ -158,7 +159,15 @@ do
 
 			sleep 5
 
-			init 0
+			if [[ $user_input =~ r$ ]]
+			then
+				reboot
+			elif [[ $user_input =~ c$ ]]
+			then
+				exit
+			else
+				init 0
+			fi
 		else
 			echo ""
 
