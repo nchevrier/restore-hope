@@ -90,7 +90,7 @@ fi
 
 if [ $cmd == "ping" ]
 then
-  $0 exec rh "echo toto > /dev/null"
+  $0 exec rh 'beep -f $((($RANDOM % 200) + 400))'
 
   if [ $? -ne 0 ]
   then
