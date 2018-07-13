@@ -138,7 +138,7 @@ if ! grep "^GRUB_CMDLINE_LINUX=.*net.ifnames=0" /etc/default/grub > /dev/null 2>
 then
   # ajouter net.ifnames=0 biosdevname=0
   # Sera appliqué au Debian RH mais aussi au Debian etudiant
-  sed -i '/GRUB_CMDLINE_LINUX/s/"$/ net.ifnames=0 biosdevname=0"/' /etc/default/grub
+  sed -i '/GRUB_CMDLINE_LINUX=/s/"$/ net.ifnames=0 biosdevname=0"/' /etc/default/grub
 
   # ou update-grub
   # grub-mkconfig -o /boot/grub/grub.cfg
