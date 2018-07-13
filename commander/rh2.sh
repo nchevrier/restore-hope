@@ -212,7 +212,8 @@ do
   #ssh -q $c "chmod +x $REMOTE_RH_PATH"
 
   ssh -q $c "nohup $REMOTE_RH_PATH $cmd $partition \"$args_remote\" > $RH_DIR/nohup.log 2>&1 &" 2> /dev/null
-
+  echo -n .
+  
   # Something went wrong (probably a network issue)
   if [ $? -ne 0 ]
   then
