@@ -41,7 +41,7 @@ echo ""
 echo ""
 echo ""
 
-echo "	Restore Hope - Restauration automatique v1.95 (13/07/2018)"
+echo "	Restore Hope - Restauration automatique v1.96 (14/07/2018)"
 echo "	IUT R/T Vitry - Anthony Delaplace, Brice Augustin, Benoit Albert et Coumaravel Soupramanien"
 echo ""
 echo "	Systèmes disponibles :"
@@ -51,24 +51,33 @@ do
 	partition="$(grep "^$j:" $base_r | cut -d: -f3)"
 	num=$(grep "^$j:" $base_r | cut -d: -f1)
 	label=$(grep "^$j:" $base_r | cut -d: -f2)
+	image=$(grep "^$j:" $base_r | cut -d: -f4)
 
-	mount $partition $MOUNTDIR
-
-	echo -n "		$num   $label"
-
-	if [ -f $MOUNTDIR/tainted -o -f $MOUNTDIR/taint/tainted ]
+  # Afficher le système slt si son image existe
+	# et que sa taille n'est pas nulle
+	if [ -s $image ]
 	then
-		echo -e "${RED} !${NC}"
+		mount $partition $MOUNTDIR
+
+		echo -n "		$num   $label"
+
+		if [ -f $MOUNTDIR/tainted -o -f $MOUNTDIR/taint/tainted ]
+		then
+			echo -e "${RED} !${NC}"
+		else
+			echo ""
+		fi
+
+		umount $partition
 	else
-		echo ""
+		echo -e "${RED}Pas d'image pour le système \"$label\"${NC}"
 	fi
 
-	umount $partition
 	j=`expr $j + 1`
 done
 
 echo ""
-echo -n "	Entrez le numero du systeme à restaurer : "
+echo -n "	Entrez le numéro du système à restaurer : "
 
 ###
 # Puppet mode part 1
@@ -147,7 +156,7 @@ do
 
 		if [ $partition != "0" -a $image != "0" -a $num != "0" -a $? -eq 0 ]
 		then
-			zcat $image |partclone.$type -r -o $partition
+			zcat $image | partclone.$type -r -o $partition
 			#	partimage restore -b -f1 $partition $image.$fin_img
 
 			# Effacer l'indicateur de restauration
