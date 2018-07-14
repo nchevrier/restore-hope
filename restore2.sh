@@ -102,7 +102,17 @@ do
 		echo ""
 		echo ""
 
-		masterip=$(cat $RH_DIR/puppetmode)
+		new_masterip=$(cat $RH_DIR/puppetmode)
+
+		if [ "$masterip" != "" -a "$masterip" != "$new_masterip" ]
+		then
+			beep 600; beep 600; beep 600
+			echo -e "${RED}Detected multiple masters (current: $masterip; new: $new_masterip)${NC}"
+			# What should we do?
+			# Warn only on the master?
+		fi
+
+		masterip=$new_masterip
 
 		setterm -back white -fore green
 
@@ -115,12 +125,13 @@ do
 			if [ $? -ne 0 ]
 			then
 				echo -e "${RED}Cannot connect to master ($masterip)${NC}"
-				beep
+				beep 400
 				sleep 10
 			fi
-			echo -e "${GREEN}Master IP : $masterip${NC}"
+			echo -e "${GREEN}Master IP: $masterip${NC}"
+			echo "Puppet IP: $netip"
 		else
-			echo -e "${GREEN}You are the master : $masterip${NC}"
+			echo -e "${GREEN}You are the master: $masterip${NC}"
 		fi
 
 		rm $RH_DIR/puppetmode
