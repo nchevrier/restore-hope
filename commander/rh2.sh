@@ -7,6 +7,7 @@ function usage
   echo "$RH_PATH status"
   echo "$RH_PATH history"
   echo "$RH_PATH ping"
+  echo "$RH_PATH locate ip_address"
   echo "$RH_PATH send system file dst"
   echo "$RH_PATH exec system cmd"
   echo "$RH_PATH restore system"
@@ -32,7 +33,7 @@ then
 fi
 
 declare -A argcount=([send]=4 [exec]=3 [restore]=2 [save]=2 [script]=3
-  [list]=1 [cancel]=1 [history]=1 [status]=1 [ping]=1)
+  [list]=1 [cancel]=1 [history]=1 [status]=1 [ping]=1 [locate]=2)
 
 # first arg must be one of the RH commands
 c=${argcount[$1]}
@@ -101,9 +102,36 @@ then
   exit
 fi
 
+# Locate a puppet (physically in the room)
+if [ $cmd == "locate" ]
+then
+  ssh $2 "for i in {1..30}; do beep; sleep 1; done"
+  exit
+fi
+
 ####
-# Next, commands that will modify puppets configuration
+# Next, macros
 ####
+
+# save|restore all
+if [ $cmd == "save" -o $cmd == "restore" ]
+then
+  # "all" keyword instead of system number
+  if [ $2 == "all" ]
+  then
+    # Get system count
+    count=$(grep "^nbr_systemes:" /etc/restore/base_restore.conf)
+
+    # Foreach system
+    for i in $(seq 1 $count)
+    do
+      # Start command (save or restore)
+      $0 $cmd $i
+    done
+
+    exit
+  fi
+fi
 
 if [ $cmd == "script" ]
 then
@@ -112,6 +140,10 @@ then
   $0 exec $2 "/tmp/${3##*/}"
   exit
 fi
+
+####
+# Finally, commands that will modify puppets configuration
+####
 
 if [ $cmd != "cancel" ]
 then
@@ -148,7 +180,7 @@ then
   # remove trailing slash for future comparison with source dir
   dstpath=${2%/}
 
-  # will happen only in in RH copy
+  # will happen only in RH copy
   if [ $dirname == $dstpath ]
   then
     echo -e "${RED}Cannot copy in the same directory.${NC}"
@@ -213,7 +245,7 @@ do
 
   ssh -q $c "nohup $REMOTE_RH_PATH $cmd $partition \"$args_remote\" > $RH_DIR/nohup.log 2>&1 &" 2> /dev/null
   echo -n .
-  
+
   # Something went wrong (probably a network issue)
   if [ $? -ne 0 ]
   then
@@ -222,6 +254,8 @@ do
     exit 1
   fi
 done
+
+echo ""
 
 ####
 # Exec command on master AFTER puppets (to let a chance to the master
