@@ -3,14 +3,6 @@
 export RH_BIN_DIR="/usr/local/sbin"
 export RH_DIR="/root/rh2"
 
-#t=$(tty)
-
-#if [ $t != "/dev/tty1" ]
-#then
-#	/bin/login
-#	exit
-#fi
-
 ####
 # Text colors
 ####
@@ -20,10 +12,6 @@ NC='\033[0m'
 
 base_r="/etc/restore/base_restore.conf"
 nbr_sys=$(grep "^nbr_systemes:" $base_r | cut -d: -f2 )
-i=0
-num="0"
-j=1
-fin_img="000"
 
 MOUNTDIR=/mnt/os
 mkdir -p $MOUNTDIR
@@ -46,12 +34,12 @@ echo "	IUT R/T Vitry - Anthony Delaplace, Brice Augustin, Benoit Albert et Couma
 echo ""
 echo "	Systèmes disponibles :"
 
-while [ $j -le $nbr_sys ]
+for i in $(seq 1 $nbr_sys)
 do
-	partition="$(grep "^$j:" $base_r | cut -d: -f3)"
-	num=$(grep "^$j:" $base_r | cut -d: -f1)
-	label=$(grep "^$j:" $base_r | cut -d: -f2)
-	image=$(grep "^$j:" $base_r | cut -d: -f4)
+	partition="$(grep "^$i:" $base_r | cut -d: -f3)"
+	num=$(grep "^$i:" $base_r | cut -d: -f1)
+	label=$(grep "^$i:" $base_r | cut -d: -f2)
+	image=$(grep "^$i:" $base_r | cut -d: -f4)
 
   # Afficher le système slt si son image existe
 	# et que sa taille n'est pas nulle
@@ -72,8 +60,6 @@ do
 	else
 		echo -e "${RED}Pas d'image pour le système \"$label\"${NC}"
 	fi
-
-	j=`expr $j + 1`
 done
 
 echo ""
@@ -150,12 +136,25 @@ do
 	if [ $read_result -eq 0 -a "$masterip" == "" ]
 	then
 		num=${user_input%[rc]}
-		partition="$(grep "^$num:" $base_r | cut -d: -f3)"
-		image="$(grep "^$num:" $base_r | cut -d: -f4)"
-		type="$(grep "^$num:" $base_r | cut -d: -f5)"
 
-		if [ $partition != "0" -a $image != "0" -a $num != "0" -a $? -eq 0 ]
+		image="$(grep "^$num:" $base_r | cut -d: -f4)"
+
+		# image est vide ("") si $num ne correspond à aucun système
+		if [ "$image" == "" ]
 		then
+			echo ""
+
+			for i in {1..18}
+			do
+				echo "	Quand on me demande un numéro entre 1 et $nbr_sys je donne un numéro entre 1 et $nbr_sys"
+			done
+		elif [ ! -s "$image" ]
+		then
+			echo -e "${RED}Pas d'image pour ce système${NC}"
+		else
+			partition="$(grep "^$num:" $base_r | cut -d: -f3)"
+			type="$(grep "^$num:" $base_r | cut -d: -f5)"
+
 			zcat $image | partclone.$type -r -o $partition
 			#	partimage restore -b -f1 $partition $image.$fin_img
 
@@ -166,8 +165,6 @@ do
 			[ -f $MOUNTDIR/taint/tainted ] && rm $MOUNTDIR/taint/tainted
 			umount $MOUNTDIR
 
-			sleep 5
-
 			if [[ $user_input =~ r$ ]]
 			then
 				reboot
@@ -177,19 +174,10 @@ do
 			else
 				init 0
 			fi
-		else
-			echo ""
-
-			i=0
-			while [ $i -lt 18 ]
-			do
-				echo "	Quand on me demande un numero entre 1 et $nbr_sys je donne un numero entre 1 et $nbr_sys"
-		        	i=`expr $i + 1`
-			done
-
-			sleep 5
 		fi
 
+		sleep 5
 		exit
+	# User input
 	fi
 done
