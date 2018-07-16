@@ -58,7 +58,7 @@ do
 
 		umount $partition
 	else
-		echo -e "${RED}Pas d'image pour le système \"$label\"${NC}"
+		echo -e "		${RED}Pas d'image pour le système \"$label\"${NC}"
 	fi
 done
 
@@ -121,15 +121,24 @@ do
 
 		if [ $netip != $masterip ]
 		then
+			# Before SSH, verify it is in the same network
+			# Trick : do a routing table lookup and check for a "via" statement
+			if ip route get $masterip | grep via > /dev/null 2>&1
+			then
+				echo -e "${RED}Master ($masterip) not directly reachable from $netip${NC}"
+				beep 400
+			fi
+
 			ssh $masterip "touch $RH_DIR/puppets/$netip" 2> /dev/null
 			if [ $? -ne 0 ]
 			then
 				echo -e "${RED}Cannot connect to master ($masterip)${NC}"
 				beep 400
 				sleep 10
+			else
+				echo -e "${GREEN}Master IP: $masterip${NC}"
+				echo "Puppet IP: $netip"
 			fi
-			echo -e "${GREEN}Master IP: $masterip${NC}"
-			echo "Puppet IP: $netip"
 		else
 			echo -e "${GREEN}You are the master: $masterip${NC}"
 		fi
