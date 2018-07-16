@@ -17,7 +17,7 @@ function cleanup
   # umount RH_DIR if mounted
   if [ ! -z "$prefix" ]
   then
-    mount | grep $RH_MOUNTDIR 2>&1 > /dev/null
+    mount | grep $RH_MOUNTDIR > /dev/null 2>&1
     if [ $? -eq 0 ]
     then
       echo "Unmounting $RH_MOUNTDIR"
@@ -250,10 +250,12 @@ then
   image=$(echo $line | cut -d ':' -f 4)
   type=$(echo $line | cut -d ':' -f 5)
 
+  set -o pipefail
+
   if [ $cmd == "restore" ]
   then
-     echo "restore"
-     zcat $image | partclone.$type -r -o $partition
+    echo "restore"
+    zcat $image | partclone.$type -r -o $partition
   elif [ $cmd == "save" ]
   then
     echo "save"
@@ -262,6 +264,7 @@ then
     #partimage -z1 -o -b -d save /dev/$partition $image
   fi
   rh_cmd_res=$?
+  set +o pipefail
 elif [ $cmd == "send" ]
 then
   dstpath=$1
