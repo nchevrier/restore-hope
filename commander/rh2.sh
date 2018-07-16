@@ -120,11 +120,12 @@ then
   if [ $2 == "all" ]
   then
     # Get system count
-    count=$(grep "^nbr_systemes:" /etc/restore/base_restore.conf)
+    count=$(grep "^nbr_systemes:" /etc/restore/base_restore.conf | cut -d: -f2)
 
     # Foreach system
     for i in $(seq 1 $count)
     do
+      echo "$0 $cmd $i"
       # Start command (save or restore)
       $0 $cmd $i
     done
@@ -338,13 +339,13 @@ cancel_count=0
 
 for c in $(ls $RH_DIR/puppets/*.nohup)
 do
-  grep "^RHCANCEL$" $c 2>&1 > /dev/null
+  grep "^RHCANCEL$" $c > /dev/null 2>&1
   if [ $? -eq 0 ]
   then
     cancel_count=$((cancel_count + 1))
   fi
 
-  grep "^RHOK$" $c 2>&1 > /dev/null
+  grep "^RHOK$" $c > /dev/null 2>&1
 
   if [ $? -ne 0 ]
   then
