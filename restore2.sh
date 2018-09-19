@@ -106,7 +106,7 @@ do
 
 		if [ "$masterip" != "" -a "$masterip" != "$new_masterip" ]
 		then
-			beep 600; beep 600; beep 600
+			beep -f 600; beep -f 600; beep -f 600
 			echo -e "${RED}Detected multiple masters (current: $masterip; new: $new_masterip)${NC}"
 			# What should we do?
 			# Warn only on the master?
