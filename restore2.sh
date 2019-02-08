@@ -29,7 +29,7 @@ echo ""
 echo ""
 echo ""
 
-echo "	Restore Hope - Restauration automatique v1.96 (14/07/2018)"
+echo "	Restore Hope - Restauration automatique v1.97 (08/02/2019)"
 echo "	IUT R/T Vitry - Anthony Delaplace, Brice Augustin, Benoit Albert et Coumaravel Soupramanien"
 echo ""
 echo "	Systèmes disponibles :"
@@ -45,18 +45,21 @@ do
 	# et que sa taille n'est pas nulle
 	if [ -s $image ]
 	then
-		mount $partition $MOUNTDIR
+    # If Windows is in hibernation state, mount fails
+		mount $partition $MOUNTDIR &> /dev/null
+    mount_OK=$?
 
 		echo -n "		$num   $label"
 
-		if [ -f $MOUNTDIR/tainted -o -f $MOUNTDIR/taint/tainted ]
+    # If could not mount partition, consider it tainted
+		if [ -f $MOUNTDIR/tainted -o -f $MOUNTDIR/taint/tainted -o $mount_OK -ne 0 ]
 		then
 			echo -e "${RED} !${NC}"
 		else
 			echo ""
 		fi
 
-		umount $partition
+		umount $partition &> /dev/null
 	else
 		echo -e "		${RED}Pas d'image pour le système \"$label\"${NC}"
 	fi
