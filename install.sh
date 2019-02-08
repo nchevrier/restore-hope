@@ -269,6 +269,9 @@ sed -i "/menuentry /s/'Windows[^']*'/'Windows'/" /boot/grub/grub.cfg
 # 3) Debian etudiant
 sed -i "/menuentry /s/'[^']*Linux[^']*sur[^']*'/'Debian Linux'/" /boot/grub/grub.cfg
 
+# Sauvegarder grub.cfg au cas où il est détruit
+cp /boot/grub/grub.cfg /home/restore/grub.cfg
+
 # grub-install sur la partition EFI
 c=$(fdisk -l | grep EFI | wc -l)
 if [ $c -eq 1 ]
@@ -324,8 +327,7 @@ popd
 #systemctl restart getty@tty1
 
 echo "Installation terminée."
-echo "Ne pas démarrer Debian etudiant et Restore Hope avant de remonter le master."
-
+echo "Ne pas démarrer Debian etudiant et Restore Hope avant de déployer le master."
 # Si c'est le cas, sur le Linux qui a été démarré :
 # systemctl enable init-interfaces.service
 # systemctl daemon-reload

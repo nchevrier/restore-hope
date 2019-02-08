@@ -53,7 +53,8 @@ chmod 777 $RH_DIR/puppets
 
 rm $RH_DIR/*.restore 2> /dev/null
 
-oldcount=0
+# Le master est le premier puppet!
+oldcount=1
 
 while true
 do
