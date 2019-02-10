@@ -85,7 +85,7 @@ clientip=$(ls $RH_DIR/puppets)
 
 count=$(echo $clientip | wc -w)
 
-echo $count puppets
+echo $count puppets + 1 master
 
 if [ $# -gt 1 ]
 then

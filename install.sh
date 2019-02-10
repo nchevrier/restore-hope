@@ -92,7 +92,7 @@ mkdir -p ~/rh2
 mkdir -p /mnt/usb
 
 ####
-#
+# Préparer la conf de RH
 ####
 
 mkdir -p /etc/restore
@@ -101,7 +101,7 @@ echo -n "" > /etc/restore/base_restore.conf
 rh_syst_count=0
 
 ####
-# Lancer restore2.sh sur tty au démarrage
+# Lancer restore2.sh sur tty1 au démarrage
 ####
 
 # Drop-in pour tty1
@@ -122,13 +122,14 @@ EOF
 #sed -i --follow-symlinks "s/^ExecStart=.*$/ExecStart=$cmdline/" /etc/systemd/system/getty.target.wants/getty\@tty1.service
 
 ####
-# Grub : préparation
+# Grub : préparation de la conf
+# Structure actuelle d'un disque :
 # sda4 windows10
 # sda5 windows2016
 # sda6 partage
 # sda7 swap
-# sda8 etudiant
-# sda9 rh
+# sda8 debian etudiant
+# sda9 RH
 ####
 
 # Anciens noms de cartes réseau (eth0, pas ens33 ou enp0s3)
@@ -159,91 +160,96 @@ echo "GRUB_DISABLE_SUBMENU=y" >> /etc/default/grub
 chmod a-x /etc/grub.d/30_uefi-firmware
 
 ####
-# Post install du Debian etudiant
+# Post install du Debian etudiant (si présent)
 ####
-
-wget --no-check-certificate https://github.com/brice-augustin/debian-etudiant/archive/master.zip -O master.zip
-
-unzip -o master.zip
-
-# Faire une sauvegarde des scripts de préparation du master (pour RH, plus tard)
-cp -r debian-etudiant-master/prep .
-
-mountdir="/mnt/debian-etudiant"
-mkdir -p $mountdir
 
 # Utiliser os-prober pour trouver le Debian etudiant
 count=$(os-prober | grep linux | wc -l)
-if [ $count -ne 1 ]
+
+# Une seule autre partition Linux sur le dique. C'est forcément le Debian etudiant
+if [ $count -eq 1 ]
+then
+  wget --no-check-certificate https://github.com/brice-augustin/debian-etudiant/archive/master.zip -O master.zip
+
+  unzip -o master.zip
+
+  # Faire une sauvegarde des scripts de préparation du master (pour RH, plus tard)
+  cp -r debian-etudiant-master/prep .
+
+  mountdir="/mnt/debian-etudiant"
+  mkdir -p $mountdir
+
+  debianpart=$(os-prober | grep linux | cut -d ':' -f1)
+
+  rh_syst_count=$((rh_syst_count + 1))
+  echo "$rh_syst_count:Linux:$debianpart:/home/restore/img_debian.pcl.gz:ext4" >> /etc/restore/base_restore.conf
+
+  # Monter le Debian etudiant
+  mount $debianpart $mountdir
+  # http://shallowsky.com/blog/tags/chroot/
+  mount --bind /dev $mountdir/dev/
+  mount --bind /proc $mountdir/proc/
+  mount --bind /sys $mountdir/sys/
+  # Eviter des warnings
+  mount --bind /dev/pts $mountdir/dev/pts
+
+  # resolv.conf de Debian etudiant pointe sur un fichier du Network Manager
+  rm -rf $mountdir/etc/resolv.conf
+  cp /etc/resolv.conf $mountdir/etc
+
+  # mv ne fonctionne pas entre deux partitions
+  cp -r debian-etudiant-master $mountdir/root
+
+  # Exécuter postinstall dans le chroot
+  chroot $mountdir /bin/bash -c "cd /root/debian-etudiant-master; ./postinstall.sh"
+
+  # Installer grub avant de copier default/grub, sinon apt couine
+  # (demande de choisir entre les deux versions de fichiers)
+  chroot $mountdir /bin/bash -c "apt-get install -y grub-efi-amd64"
+
+  # Copier le fichier de conf grub de RH sur le Debian etudiant
+  cp /etc/default/grub $mountdir/etc/default
+
+  # Génère une unique entrée (pour le Debian etudiant)
+  # Ne pas ajouter d'entrée "setup" pour EFI
+  # Ne pas prober les autres OS
+  chroot $mountdir /bin/bash -c "chmod a-x /etc/grub.d/30_uefi-firmware \
+      && chmod a-x /etc/grub.d/30_os-prober \
+      && update-grub \
+      && cp /boot/grub/grub.cfg /root/grub.cfg \
+      && apt-get remove -y --purge grub* \
+      && mkdir -p /boot/grub \
+      && mv /root/grub.cfg /boot/grub"
+
+  # Supprimer les scripts sur le Debian etudiant
+  rm -rf $mountdir/root/debian-etudiant-master
+
+  # --lazy si démontage refusé à cause d'un fichier en cours d'utilisation (systemd)
+  # -- recursive
+  # Ne pas utiliser : freeze le reboot suivant (pourquoi ?)
+  # umount --lazy $mountdir
+  # https://unix.stackexchange.com/questions/61885/how-to-unmount-a-formerly-chrootd-filesystem
+  umount $mountdir/dev/pts
+
+  # Toujours une erreur à cause de /dev/null utilisé par des process !
+  # Peut-être lié aux dbus-launch ?
+  # Tout nettoyer avant démontage de dev
+  for pid in $(lsof | grep $mountdir/dev | awk '{print $2}' | sort | uniq)
+  do
+    kill $pid
+  done
+
+  umount $mountdir/dev/
+  umount $mountdir/proc/
+  umount $mountdir/sys/
+  umount $mountdir
+
+# Plusieurs partitions Linux. On ne sait pas laquelle est la Debian etudiant
+elif [ $count -gt 1 ]
 then
   echo "Il existe plusieurs autres OS Linux sur le disque. Arrêt."
   exit
 fi
-
-debianpart=$(os-prober | grep linux | cut -d ':' -f1)
-
-rh_syst_count=$((rh_syst_count + 1))
-echo "$rh_syst_count:Linux:$debianpart:/home/restore/img_debian.pcl.gz:ext4" >> /etc/restore/base_restore.conf
-
-# Monter le Debian etudiant
-mount $debianpart $mountdir
-# http://shallowsky.com/blog/tags/chroot/
-mount --bind /dev $mountdir/dev/
-mount --bind /proc $mountdir/proc/
-mount --bind /sys $mountdir/sys/
-# Eviter des warnings
-mount --bind /dev/pts $mountdir/dev/pts
-
-# resolv.conf de Debian etudiant pointe sur un fichier du Network Manager
-rm -rf $mountdir/etc/resolv.conf
-cp /etc/resolv.conf $mountdir/etc
-
-# mv ne fonctionne pas entre deux partitions
-cp -r debian-etudiant-master $mountdir/root
-
-# Exécuter postinstall dans le chroot
-chroot $mountdir /bin/bash -c "cd /root/debian-etudiant-master; ./postinstall.sh"
-
-# Installer grub avant de copier default/grub, sinon apt couine
-# (demande de choisir entre les deux versions de fichiers)
-chroot $mountdir /bin/bash -c "apt-get install -y grub-efi-amd64"
-
-# Copier le fichier de conf grub de RH sur le Debian etudiant
-cp /etc/default/grub $mountdir/etc/default
-
-# Génère une unique entrée (pour le Debian etudiant)
-# Ne pas ajouter d'entrée "setup" pour EFI
-# Ne pas prober les autres OS
-chroot $mountdir /bin/bash -c "chmod a-x /etc/grub.d/30_uefi-firmware \
-    && chmod a-x /etc/grub.d/30_os-prober \
-    && update-grub \
-    && cp /boot/grub/grub.cfg /root/grub.cfg \
-    && apt-get remove -y --purge grub* \
-    && mkdir -p /boot/grub \
-    && mv /root/grub.cfg /boot/grub"
-
-# Supprimer les scripts sur le Debian etudiant
-rm -rf $mountdir/root/debian-etudiant-master
-
-# --lazy si démontage refusé à cause d'un fichier en cours d'utilisation (systemd)
-# -- recursive
-# Ne pas utiliser : freeze le reboot suivant (pourquoi ?)
-# umount --lazy $mountdir
-# https://unix.stackexchange.com/questions/61885/how-to-unmount-a-formerly-chrootd-filesystem
-umount $mountdir/dev/pts
-
-# Toujours une erreur à cause de /dev/null utilisé par des process !
-# Peut-être lié aux dbus-launch ?
-# Tout nettoyer avant démontage de dev
-for pid in $(lsof | grep $mountdir/dev | awk '{print $2}' | sort | uniq)
-do
-  kill $pid
-done
-
-umount $mountdir/dev/
-umount $mountdir/proc/
-umount $mountdir/sys/
-umount $mountdir
 
 ####
 # Grub finalisation
@@ -252,7 +258,7 @@ umount $mountdir
 # Générer grub.cfg (Windows et Debian etudiant sont découverts et ajoutés
 # par os_prober. Dans le cas de Debian etudiant, si os_prober trouve un
 # grub.cfg sur cette partition, il ajoute les entrées de ce fichier
-# (normalement il n'y en aura qu'une)
+# (normalement il n'y en aura qu'une; voir plus haut)
 update-grub
 
 # Renommer les entrées crées dans grub.cfg :
