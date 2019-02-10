@@ -13,6 +13,10 @@ then
   exit
 fi
 
+LOGFILE=.restore-hope.log
+
+rm $LOGFILE &> /dev/null
+
 ####
 # Requis : une carte branchée avec accès internet
 # TODO : tenter de configurer la carte si on détecte un câble branché ?
@@ -22,7 +26,7 @@ netif=$(ip route | grep default)
 
 if [ $? -ne 0 ]
 then
-  echo "Pas de connexion réseau"
+  echo "Pas de connexion réseau. Impossible de continuer."
   exit
 fi
 
@@ -38,10 +42,10 @@ apt-get install -y openssh-server \
                 udpcast \
                 exfat-fuse \
                 ntfs-3g \
-                partclone
+                partclone >> $LOGFILE 2>&1
 
 # Pour nettoyage après chroot. Désinstaller après ?
-apt-get install -y lsof
+apt-get install -y lsof >> $LOGFILE 2>&1
 
 ####
 # SSH
