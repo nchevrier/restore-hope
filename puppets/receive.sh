@@ -90,6 +90,8 @@ function report
 RH_MOUNTDIR=/mnt/rh
 RH_DIR="/root/rh2"
 RESTORE2_PATH="/usr/local/sbin/restore2.sh"
+RH_CONF="/etc/restore/base_restore.conf"
+
 http_proxy=${http_proxy:-http://proxy.iutcv.fr:3128}
 https_proxy=${https_proxy:-$http_proxy}
 ftp_proxy=${ftp_proxy:-$http_proxy}
@@ -111,7 +113,7 @@ system=$2
 
 if [ $system != "rh" ]
 then
-  partition=$(grep "^$system:" $RH_CONF | cut -d ':' -f3)
+  partition=$(grep "^$system:" $RH_CONF | cut -d ':' -f 3)
 else
   partition="rh"
 fi
@@ -211,7 +213,7 @@ then
     rh_cmd_res=$?
   # exec on other system: need to chroot
   else
-    line=$(grep ":$partition:" /etc/restore/base_restore.conf)
+    line=$(grep ":$partition:" $RH_CONF)
     type=$(echo $line | cut -d ':' -f 5)
 
     if [ $type != "ext4" ]
@@ -254,7 +256,7 @@ elif [ $cmd == "save" ]
 then
   echo save arguments : "$@"
 
-  line=$(grep ":$partition:" /etc/restore/base_restore.conf)
+  line=$(grep ":$partition:" $RH_CONF)
 
   if [ $? -ne 0 ]
   then
