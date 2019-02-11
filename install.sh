@@ -52,7 +52,7 @@ apt-get install -y lsof >> $LOGFILE 2>&1
 ####
 
 # Pas de passphrase, écraser (y) la clé si elle existe déjà
-yes y | ssh-keygen -f ~/.ssh/id_rsa -N ""
+yes y | ssh-keygen -f ~/.ssh/id_rsa -N "" >> $LOGFILE 2>&1
 
 # Copie de la clé publique dans les clés autorisées pour la connexion SSH
 cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
@@ -175,7 +175,7 @@ if [ $count -eq 1 ]
 then
   wget --no-check-certificate https://github.com/brice-augustin/debian-etudiant/archive/master.zip -O master.zip
 
-  unzip -o master.zip
+  unzip -o master.zip >> $LOGFILE 2>&1
 
   # Faire une sauvegarde des scripts de préparation du master (pour RH, plus tard)
   cp -r debian-etudiant-master/prep .
@@ -223,7 +223,7 @@ then
       && cp /boot/grub/grub.cfg /root/grub.cfg \
       && apt-get remove -y --purge grub* \
       && mkdir -p /boot/grub \
-      && mv /root/grub.cfg /boot/grub"
+      && mv /root/grub.cfg /boot/grub" >> $LOGFILE 2>&1
 
   # Supprimer les scripts sur le Debian etudiant
   rm -rf $mountdir/root/debian-etudiant-master
