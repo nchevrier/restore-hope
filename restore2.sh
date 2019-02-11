@@ -22,7 +22,7 @@ function restore_partition {
   return_value=0
 
   # Nettoyage des entrées UEFI (si Windows a mis le bazard)
-  if [ $num == "u" ]
+  if [ "$num" == "u" ]
   then
     # Effacer toutes les entrées actuelles
     for res in $(efibootmgr -v | grep -E "(debian|Microsoft)" | grep -E "^Boot[0-9]" | cut -d ' ' -f 1)
@@ -90,7 +90,7 @@ function restore_partition {
 
   fi
 
-  return return_value
+  return $return_value
 }
 
 # Le script est invoqué en mode non-interactif.
@@ -250,17 +250,24 @@ do
 
     restore_partition $num
 
-    if [[ $user_input =~ r$ ]]
-    then
-      reboot
-    elif [[ $user_input =~ c$ ]]
-    then
-      exit
-    else
-      init 0
-    fi
+    ret=$?
 
     sleep 5
+
+    # If the requested command worked well, continue.
+    if [ $ret -eq 0 ]
+    then
+      if [[ $user_input =~ r$ ]]
+      then
+        reboot
+      elif [[ $user_input =~ c$ ]]
+      then
+        exit
+      else
+        init 0
+      fi
+    fi
+
     exit
   fi
 done
