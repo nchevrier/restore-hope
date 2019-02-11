@@ -29,7 +29,7 @@ function restore_partition {
     do
       id=${res:4:4}
       # Quiet mode sinon affiche la totalité des entrées EFI
-      efibootmgr -B -b $id -q
+      efibootmgr -q -B -b $id
     done
 
     # Ajout d'une nouvelle entrée EFI"
@@ -42,7 +42,7 @@ function restore_partition {
     id=${res:4:4}
 
     # Changer le boot order
-    efibootmgr -o $id -q
+    efibootmgr -q -o $id
 
     return 0
   fi

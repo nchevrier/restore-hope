@@ -34,7 +34,7 @@ fi
 # Paquetages
 ####
 
-apt-get update -y
+apt-get update -y >> $LOGFILE 2>&1
 apt-get install -y openssh-server \
                 socat \
                 beep \
