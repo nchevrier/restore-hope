@@ -201,8 +201,8 @@ if [ $cmd != "restore" -a $cmd != "save" -a $cmd != "cancel" ]
 then
   if [ ! -f $RH_DIR/$system.restore ]
   then
-    echo "Restore partition $system before touching it!"
-    echo "Run \"touch $RH_DIR/$system.restore\" to mark the partition as restored."
+    echo "Restore system $system before touching it!"
+    echo "Run \"touch $RH_DIR/$system.restore\" to mark the system as restored."
     echo -e "${RED}Use with caution.${NC}"
     exit 1
   fi
@@ -244,7 +244,7 @@ do
   #scp -q $REMOTE_RH_PATH $c:$REMOTE_RH_PATH > /dev/null
   #ssh -q $c "chmod +x $REMOTE_RH_PATH"
 
-  ssh -q $c "nohup $REMOTE_RH_PATH $cmd $partition \"$args_remote\" > $RH_DIR/nohup.log 2>&1 &" 2> /dev/null
+  ssh -q $c "nohup $REMOTE_RH_PATH $cmd $system \"$args_remote\" > $RH_DIR/nohup.log 2>&1 &" 2> /dev/null
   echo -n .
 
   # Something went wrong (probably a network issue)
@@ -272,9 +272,9 @@ fi
 
 if [ $cmd == "exec" ]
 then
-  nohup $REMOTE_RH_PATH $cmd $partition "$args_local" > $RH_DIR/nohup.log 2>&1 &
+  nohup $REMOTE_RH_PATH $cmd $system "$args_local" > $RH_DIR/nohup.log 2>&1 &
 else
-  nohup $REMOTE_RH_PATH $cmd $partition $args_local > $RH_DIR/nohup.log 2>&1 &
+  nohup $REMOTE_RH_PATH $cmd $system $args_local > $RH_DIR/nohup.log 2>&1 &
 fi
 
 # Monitor nohup.log in bottom left window

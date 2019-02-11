@@ -89,24 +89,32 @@ function report
 # Centralize that!
 RH_MOUNTDIR=/mnt/rh
 RH_DIR="/root/rh2"
+RESTORE2_PATH="/usr/local/sbin/restore2.sh"
 http_proxy=${http_proxy:-http://proxy.iutcv.fr:3128}
 https_proxy=${https_proxy:-$http_proxy}
 ftp_proxy=${ftp_proxy:-$http_proxy}
 
 if [ $# -lt 1 ]
 then
-  echo "$0 send partition dstpath [localfile]"
-  echo "$0 exec partition cmd"
+  echo "$0 send system dstpath [localfile]"
+  echo "$0 exec system cmd"
   echo "$0 cancel"
-  echo "$0 restore partition"
-  echo "$0 save partition"
+  echo "$0 restore system"
+  echo "$0 save system"
   exit
 fi
 
 echo Remote command: "$@"
 
 cmd=$1
-partition=$2
+system=$2
+
+if [ $system != "rh" ]
+then
+  partition=$(grep "^$system:" $RH_CONF | cut -d ':' -f3)
+else
+  partition="rh"
+fi
 
 shift 2
 
@@ -235,10 +243,19 @@ then
 
   # XXX test&debug, remove
   #/bin/bash -c "$@"
-elif [ $cmd == "restore" -o $cmd == "save" ]
+elif [ $cmd == "restore" ]
 then
-  echo restore/save arguments : "$@"
+  echo "restore"
+  # Invoquer le script de restauration de manière non-interactive.
+  $RESTORE2_PATH $system
+
+  rh_cmd_res=$?
+elif [ $cmd == "save" ]
+then
+  echo save arguments : "$@"
+
   line=$(grep ":$partition:" /etc/restore/base_restore.conf)
+
   if [ $? -ne 0 ]
   then
     echo "$partition does not exist"
@@ -252,17 +269,8 @@ then
 
   set -o pipefail
 
-  if [ $cmd == "restore" ]
-  then
-    echo "restore"
-    zcat $image | partclone.$type -r -o $partition
-  elif [ $cmd == "save" ]
-  then
-    echo "save"
-    # from crea_img(2).sh
-    partclone.$type -c -s $partition | gzip -c > $image
-    #partimage -z1 -o -b -d save /dev/$partition $image
-  fi
+  partclone.$type -c -s $partition | gzip -c > $image
+
   rh_cmd_res=$?
   set +o pipefail
 elif [ $cmd == "send" ]

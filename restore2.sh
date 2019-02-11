@@ -10,14 +10,91 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-base_r="/etc/restore/base_restore.conf"
-nbr_sys=$(grep "^nbr_systemes:" $base_r | cut -d: -f2 )
-
-function restore_partition {
-}
+RH_CONF="/etc/restore/base_restore.conf"
+nbr_sys=$(grep "^nbr_systemes:" $RH_CONF | cut -d: -f2 )
 
 MOUNTDIR=/mnt/os
 mkdir -p $MOUNTDIR
+
+function restore_partition {
+  num=$1
+
+  return_value=0
+
+  # Nettoyage des entrées UEFI (si Windows a mis le bazard)
+  if [ $num == "u" ]
+  then
+    # Effacer toutes les entrées actuelles
+    for id in $(efibootmgr -v | grep -E "(debian|Microsoft)" | grep -E "^Boot[0-9]" | cut -d ' ' -f 1)
+    do
+      id=${res:4:4}
+      # Quiet mode sinon affiche la totalité des entrées EFI
+      efibootmgr -B -b $id -q
+    done
+
+    # Ajout d'une nouvelle entrée EFI"
+    # XXX -p 2 indique la partition EFI se trouve dans sda2.
+    # Trouver automatiquement le numéro de la partition
+    efibootmgr -q -c -d /dev/sda -p 2 -L "RESTORE-HOPE" -l "\EFI\debian\grubx64.efi"
+
+    # Numéro de la nouvelle entrée
+    res=$(efibootmgr | grep "RESTORE-HOPE")
+    id=${res:4:4}
+
+    # Changer le boot order
+    efibootmgr -o $id -q
+
+    return 0
+  fi
+
+  image="$(grep "^$num:" $RH_CONF | cut -d: -f4)"
+
+  # image est vide ("") si $num ne correspond à aucun système
+  if [ "$image" == "" ]
+  then
+    echo ""
+
+    for i in {1..18}
+    do
+      echo "	Quand on me demande un numéro entre 1 et $nbr_sys je donne un numéro entre 1 et $nbr_sys"
+    done
+
+    return_value=1
+  elif [ ! -s "$image" ]
+  then
+    echo -e "${RED}Pas d'image pour ce système${NC}"
+    return_value=1
+  else
+    partition="$(grep "^$num:" $RH_CONF | cut -d: -f3)"
+    type="$(grep "^$num:" $RH_CONF | cut -d: -f5)"
+
+    set -o pipefail
+
+    zcat $image | partclone.$type -r -o $partition
+
+    return_value=$?
+
+    set +o pipefail
+
+    # Effacer l'indicateur de restauration
+    # (juste au cas où on l'a oublié sur le master)
+    mount $partition $MOUNTDIR
+    [ -f $MOUNTDIR/tainted ] && rm $MOUNTDIR/tainted
+    [ -f $MOUNTDIR/taint/tainted ] && rm $MOUNTDIR/taint/tainted
+    umount $MOUNTDIR
+
+  fi
+
+  return return_value
+}
+
+# Le script est invoqué en mode non-interactif.
+# Exécuter la commande demandée puis stopper.
+if [ $# -gt 0 ]
+then
+  restore_partition $1
+  exit
+fi
 
 clear
 
@@ -35,14 +112,14 @@ echo ""
 echo "	Restore Hope - Restauration automatique v1.97 (08/02/2019)"
 echo "	IUT R/T Vitry - Anthony Delaplace, Brice Augustin, Benoit Albert et Coumaravel Soupramanien"
 echo ""
-echo "	Systèmes disponibles :"
+echo "	Systèmes à restaurer :"
 
 for i in $(seq 1 $nbr_sys)
 do
-  partition="$(grep "^$i:" $base_r | cut -d: -f3)"
-  num=$(grep "^$i:" $base_r | cut -d: -f1)
-  label=$(grep "^$i:" $base_r | cut -d: -f2)
-  image=$(grep "^$i:" $base_r | cut -d: -f4)
+  partition="$(grep "^$i:" $RH_CONF | cut -d: -f3)"
+  num=$(grep "^$i:" $RH_CONF | cut -d: -f1)
+  label=$(grep "^$i:" $RH_CONF | cut -d: -f2)
+  image=$(grep "^$i:" $RH_CONF | cut -d: -f4)
 
   # Afficher le système slt si son image existe
   # et que sa taille n'est pas nulle
@@ -67,6 +144,9 @@ do
     echo -e "		${RED}Pas d'image pour le système \"$label\"${NC}"
   fi
 done
+
+echo ""
+echo "		u   Boot UEFI"
 
 echo ""
 echo -n "	Entrez le numéro du système à restaurer : "
@@ -163,47 +243,19 @@ do
   then
     num=${user_input%[rc]}
 
-    image="$(grep "^$num:" $base_r | cut -d: -f4)"
+    restore_partition $num
 
-    # image est vide ("") si $num ne correspond à aucun système
-    if [ "$image" == "" ]
+    if [[ $user_input =~ r$ ]]
     then
-      echo ""
-
-      for i in {1..18}
-      do
-        echo "	Quand on me demande un numéro entre 1 et $nbr_sys je donne un numéro entre 1 et $nbr_sys"
-      done
-    elif [ ! -s "$image" ]
+      reboot
+    elif [[ $user_input =~ c$ ]]
     then
-      echo -e "${RED}Pas d'image pour ce système${NC}"
+      exit
     else
-      partition="$(grep "^$num:" $base_r | cut -d: -f3)"
-      type="$(grep "^$num:" $base_r | cut -d: -f5)"
-
-      zcat $image | partclone.$type -r -o $partition
-      #	partimage restore -b -f1 $partition $image.$fin_img
-
-      # Effacer l'indicateur de restauration
-      # (juste au cas où on l'a oublié sur le master)
-			mount $partition $MOUNTDIR
-      [ -f $MOUNTDIR/tainted ] && rm $MOUNTDIR/tainted
-      [ -f $MOUNTDIR/taint/tainted ] && rm $MOUNTDIR/taint/tainted
-      umount $MOUNTDIR
-
-      if [[ $user_input =~ r$ ]]
-      then
-        reboot
-      elif [[ $user_input =~ c$ ]]
-      then
-        exit
-      else
-        init 0
-      fi
+      init 0
     fi
 
     sleep 5
     exit
-  # User input
   fi
 done
