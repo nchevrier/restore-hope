@@ -35,7 +35,10 @@ function restore_partition {
     # Ajout d'une nouvelle entrée EFI"
     # XXX -p 2 indique la partition EFI se trouve dans sda2.
     # Trouver automatiquement le numéro de la partition
-    efibootmgr -q -c -d /dev/sda -p 2 -L "RESTORE-HOPE" -l "\EFI\debian\grubx64.efi"
+    efipart=$(fdisk -l | grep EFI | cut -d ' ' -f 1)
+    disk=${efipart%?}
+    partnum=$(echo -n $efipart | tail -c 1)
+    efibootmgr -q -c -d $disk -p $partnum -L "RESTORE-HOPE" -l "\EFI\debian\grubx64.efi"
 
     # Numéro de la nouvelle entrée
     res=$(efibootmgr | grep "RESTORE-HOPE")
