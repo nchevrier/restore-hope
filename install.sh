@@ -209,7 +209,7 @@ then
 
   # Installer grub avant de copier default/grub, sinon apt couine
   # (demande de choisir entre les deux versions de fichiers)
-  chroot $mountdir /bin/bash -c "apt-get install -y grub-efi-amd64"
+  chroot $mountdir /bin/bash -c "apt-get install -y grub-efi-amd64" >> $LOGFILE 2>&1
 
   # Copier le fichier de conf grub de RH sur le Debian etudiant
   cp /etc/default/grub $mountdir/etc/default

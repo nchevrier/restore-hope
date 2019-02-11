@@ -25,7 +25,7 @@ function restore_partition {
   if [ $num == "u" ]
   then
     # Effacer toutes les entrées actuelles
-    for id in $(efibootmgr -v | grep -E "(debian|Microsoft)" | grep -E "^Boot[0-9]" | cut -d ' ' -f 1)
+    for res in $(efibootmgr -v | grep -E "(debian|Microsoft)" | grep -E "^Boot[0-9]" | cut -d ' ' -f 1)
     do
       id=${res:4:4}
       # Quiet mode sinon affiche la totalité des entrées EFI
@@ -43,6 +43,8 @@ function restore_partition {
 
     # Changer le boot order
     efibootmgr -q -o $id
+
+    sleep 5
 
     return 0
   fi
