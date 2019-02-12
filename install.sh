@@ -18,6 +18,19 @@ LOGFILE=.restore-hope.log
 rm $LOGFILE &> /dev/null
 
 ####
+# Paramètres
+####
+ENABLE_LOGIN=0
+
+if [ $# -eq 1 ]
+then
+  if [ $1 == "login" ]
+  then
+    ENABLE_LOGIN=1
+  fi
+fi
+
+####
 # Requis : une carte branchée avec accès internet
 # TODO : tenter de configurer la carte si on détecte un câble branché ?
 ####
@@ -105,25 +118,40 @@ echo -n "" > /etc/restore/base_restore.conf
 rh_syst_count=0
 
 ####
-# Lancer restore2.sh sur tty1 au démarrage
+# Lancer restore2.sh au démarrage
 ####
 
-# Drop-in pour tty1
-# https://askubuntu.com/questions/659267/how-do-i-override-or-configure-systemd-services
-# Bug : Cannot edit units if not on a tty
-#SYSTEMD_EDITOR=tee systemctl edit getty@tty1 << EOF
+if [ $ENABLE_LOGIN -eq 0 ]
+then
+  # Pas de login au démarrage
+  # Drop-in pour tty1
+  # https://askubuntu.com/questions/659267/how-do-i-override-or-configure-systemd-services
+  # Bug : Cannot edit units if not on a tty
+  #SYSTEMD_EDITOR=tee systemctl edit getty@tty1 << EOF
 
-mkdir -p /etc/systemd/system/getty\@tty1.service.d
+  mkdir -p /etc/systemd/system/getty\@tty1.service.d
 
-cat > /etc/systemd/system/getty\@tty1.service.d/override.conf << EOF
+  cat > /etc/systemd/system/getty\@tty1.service.d/override.conf << EOF
 [Service]
 ExecStartPre=/bin/sh -c 'setleds -D +num < /dev/%I'
 ExecStart=
 ExecStart=-/sbin/agetty --noclear %I $TERM -n -i -l /usr/local/sbin/restore2.sh
 EOF
 
-#cmdline='-\/sbin\/agetty --noclear %I $TERM -i -n -l \/usr\/local\/sbin\/restore2.sh'
-#sed -i --follow-symlinks "s/^ExecStart=.*$/ExecStart=$cmdline/" /etc/systemd/system/getty.target.wants/getty\@tty1.service
+  #cmdline='-\/sbin\/agetty --noclear %I $TERM -i -n -l \/usr\/local\/sbin\/restore2.sh'
+  #sed -i --follow-symlinks "s/^ExecStart=.*$/ExecStart=$cmdline/" /etc/systemd/system/getty.target.wants/getty\@tty1.service
+else
+  # Exécuter restore2.sh sur tty1, mais après le login
+  cat >> /root/.bashrc << EOF
+
+tty=$(tty)
+if [ "$tty" == "/dev/tty1" ]
+then
+	/usr/local/sbin/restore2.sh
+fi
+EOF
+
+fi
 
 ####
 # Grub : préparation de la conf
