@@ -27,6 +27,7 @@ if [ $# -eq 1 ]
 then
   if [ $1 == "login" ]
   then
+    echo "Le mot de passe root sera demandé avant la restauration d'un OS"
     ENABLE_LOGIN=1
   fi
 fi
@@ -153,7 +154,7 @@ else
   cat >> /root/.bashrc << EOF
 
 tty=$(tty)
-if [ "$tty" == "/dev/tty1" ]
+if [ "\$tty" == "/dev/tty1" ]
 then
 	/usr/local/sbin/restore2.sh
 fi

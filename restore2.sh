@@ -52,13 +52,18 @@ function loterie_nudge {
   then
     echo -e "	${GREEN}VOUS REMPORTEZ LE GROS LOT !!!${NC}"
 
-    $RH_BIN_DIR/mario-victory.sh
+    for i in {1..3}
+    do
+      $RH_BIN_DIR/mario-victory.sh
+      sleep 10
+    done
 
     sleep 120
   else
     echo -e "	${RED}Perdu !${NC} Retentez votre chance à la fin du prochain TP !"
   fi
 
+  echo ""
   echo ""
   echo ""
 }
@@ -119,7 +124,7 @@ function restore_partition {
   else
     echo ""
     echo ""
-    echo -e "${GREEN}	Nouveau !${NC} Appuyez sur Entrée pour participer à la Loterie R&T ..."
+    echo -n -e "${GREEN}	Nouveau !${NC} Appuyez sur Entrée pour participer à la Loterie R&T ... "
 
     read -t 5 loterie_input
 
