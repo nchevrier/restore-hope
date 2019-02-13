@@ -16,6 +16,26 @@ nbr_sys=$(grep "^nbr_systemes:" $RH_CONF | cut -d: -f2 )
 MOUNTDIR=/mnt/os
 mkdir -p $MOUNTDIR
 
+function loterie_nudge {
+  timeout 5 cmatrix
+
+  numero=$((RANDOM % 1000))
+
+  if [ $numero -eq 42 ]
+  then
+    echo -e "${GREEN}VOUS REMPORTEZ LE GROS LOT !!!${NC}"
+
+    ./$RH_BIN_DIR/mario-victory.sh
+
+    sleep 120
+  else
+    echo -e "${RED}Perdu !${NC} Retentez votre chance à la fin du prochain TP !"
+  fi
+
+  echo ""
+  echo ""
+}
+
 function restore_partition {
   num=$1
 
@@ -70,6 +90,16 @@ function restore_partition {
     echo -e "${RED}Pas d'image pour ce système${NC}"
     return_value=1
   else
+    echo -e "${GREEN}Nouveau !${NC}Appuyez sur Entrée pour participer à la Loterie R&T ..."
+
+    read -t 5 user_input
+
+    # Pas un timeout
+    if [ $? -eq 0 ]
+    then
+      loterie_nudge
+    fi
+
     set -o pipefail
 
     zcat $image | partclone.$type -r -o $partition

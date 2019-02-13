@@ -53,6 +53,7 @@ apt-get install -y openssh-server \
                 socat \
                 beep \
                 screen \
+                ethtool \
                 udpcast \
                 exfat-fuse \
                 ntfs-3g \
@@ -60,6 +61,9 @@ apt-get install -y openssh-server \
 
 # Pour nettoyage après chroot. Désinstaller après ?
 apt-get install -y lsof >> $LOGFILE 2>&1
+
+# Pour la loterie
+apt-get install -y cmatrix >> $LOGFILE 2>&1
 
 ####
 # SSH
