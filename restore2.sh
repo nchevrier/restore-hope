@@ -33,13 +33,26 @@ function loterie_nudge {
   # après la destruction de cmatrix
   stty sane
 
+  clear
+
+  echo ""
+  echo ""
+  echo ""
+  echo ""
+  echo ""
+  echo ""
+  echo ""
+  echo ""
+  echo ""
+  echo ""
+
   numero=$((RANDOM % 1000))
 
   if [ $numero -eq 42 ]
   then
     echo -e "	${GREEN}VOUS REMPORTEZ LE GROS LOT !!!${NC}"
 
-    ./$RH_BIN_DIR/mario-victory.sh
+    $RH_BIN_DIR/mario-victory.sh
 
     sleep 120
   else
@@ -104,6 +117,8 @@ function restore_partition {
     echo -e "${RED}	Pas d'image pour ce système${NC}"
     return_value=1
   else
+    echo ""
+    echo ""
     echo -e "${GREEN}	Nouveau !${NC} Appuyez sur Entrée pour participer à la Loterie R&T ..."
 
     read -t 5 loterie_input

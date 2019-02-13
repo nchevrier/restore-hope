@@ -104,6 +104,9 @@ cp commander/*.sh /usr/local/sbin/
 # base_restore_manager.sh crea_img.sh
 cp admin/*.sh /usr/local/sbin/
 
+# Petite musique de victoire
+cp nudge/*.sh /usr/local/sbin/
+
 # Les rendre exécutables
 # Pas besoin, git préserve les droits d'exécution
 
