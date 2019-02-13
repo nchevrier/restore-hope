@@ -262,6 +262,7 @@ then
       && mv /root/grub.cfg /boot/grub" >> $LOGFILE 2>&1
 
   # Supprimer les scripts sur le Debian etudiant
+  cp $mountdir/root/debian-etudiant-master/.debian-etudiant.log .
   rm -rf $mountdir/root/debian-etudiant-master
 
   # --lazy si démontage refusé à cause d'un fichier en cours d'utilisation (systemd)
