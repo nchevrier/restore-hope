@@ -355,7 +355,7 @@ then
 
   # Ajouter une entrée dans le fichier de conf de RH
   rh_syst_count=$((rh_syst_count + 1))
-  echo "u:Boot UEFI:$efipart:/home/restore/img_efi.FAKE.gz:efi" >> $RH_CONF
+  echo "$rh_syst_count:Boot UEFI:$efipart:/home/restore/img_efi.FAKE.gz:efi" >> $RH_CONF
   # Eviter que le script de restauration affiche un avertissement
   # sur l'inexistence d'une image pour ce système
   echo "FAKE" > /home/restore/img_efi.FAKE.gz
