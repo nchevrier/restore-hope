@@ -13,6 +13,7 @@ then
   exit
 fi
 
+RH_CONF="/etc/restore/base_restore.conf"
 LOGFILE=.restore-hope.log
 
 rm $LOGFILE &> /dev/null
@@ -114,7 +115,7 @@ mkdir -p /mnt/usb
 
 mkdir -p /etc/restore
 mkdir -p /home/restore/
-echo -n "" > /etc/restore/base_restore.conf
+echo -n "" > $RH_CONF
 rh_syst_count=0
 
 ####
@@ -214,7 +215,7 @@ then
   debianpart=$(os-prober | grep linux | cut -d ':' -f1)
 
   rh_syst_count=$((rh_syst_count + 1))
-  echo "$rh_syst_count:Linux:$debianpart:/home/restore/img_debian.pcl.gz:ext4" >> /etc/restore/base_restore.conf
+  echo "$rh_syst_count:Linux:$debianpart:/home/restore/img_debian.pcl.gz:ext4" >> $RH_CONF
 
   # Monter le Debian etudiant
   mount $debianpart $mountdir
@@ -310,17 +311,6 @@ sed -i "/menuentry /s/'[^']*Linux[^']*sur[^']*'/'Debian Linux'/" /boot/grub/grub
 # Sauvegarder grub.cfg au cas où il est détruit
 cp /boot/grub/grub.cfg /home/restore/grub.cfg
 
-# grub-install sur la partition EFI
-c=$(fdisk -l | grep EFI | wc -l)
-if [ $c -eq 1 ]
-then
-  efipart=$(fdisk -l | grep EFI | cut -d ' ' -f1)
-  grub-install $efipart
-else
-  echo "Il existe plusieurs partitions EFI."
-  echo "A vous de lancer grub-install sur la bonne."
-fi
-
 ####
 # base_restore.conf
 ####
@@ -339,19 +329,38 @@ do
 
       if grep "WINDOWS SERVER" $mountdir/Windows/System32/license.rtf > /dev/null 2>&1
       then
-        echo "$rh_syst_count:Windows Server:$p:/home/restore/img_win16.pcl.gz:ntfs" >> /etc/restore/base_restore.conf
+        echo "$rh_syst_count:Windows Server:$p:/home/restore/img_win16.pcl.gz:ntfs" >> $RH_CONF
       else
-        echo "$rh_syst_count:Windows 10:$p:/home/restore/img_win10.pcl.gz:ntfs" >> /etc/restore/base_restore.conf
+        echo "$rh_syst_count:Windows 10:$p:/home/restore/img_win10.pcl.gz:ntfs" >> $RH_CONF
       fi
     else
-      echo "$rh_syst_count:DATA:$p:/home/restore/img_data.pcl.gz:ntfs" >> /etc/restore/base_restore.conf
+      echo "$rh_syst_count:DATA:$p:/home/restore/img_data.pcl.gz:ntfs" >> $RH_CONF
     fi
 
     umount $mountdir
   fi
 done
 
-echo "nbr_systemes:$rh_syst_count" >> /etc/restore/base_restore.conf
+# grub-install sur la partition EFI
+# Après toutes les autres pour éviter un "trou" dans la numérotation des systèmes
+c=$(fdisk -l | grep EFI | wc -l)
+if [ $c -eq 1 ]
+then
+  efipart=$(fdisk -l | grep EFI | cut -d ' ' -f1)
+  grub-install $efipart
+
+  # Ajouter une entrée dans le fichier de conf de RH
+  rh_syst_count=$((rh_syst_count + 1))
+  echo "u:Boot UEFI:$efipart:/home/restore/img_efi.FAKE.gz:efi" >> $RH_CONF
+  # Eviter que le script de restauration affiche un avertissement
+  # sur l'inexistence d'une image pour ce système
+  echo "FAKE" > /home/restore/img_efi.FAKE.gz
+else
+  echo "Il existe plusieurs partitions EFI."
+  echo "A vous de lancer grub-install sur la bonne."
+fi
+
+echo "nbr_systemes:$rh_syst_count" >> $RH_CONF
 
 ####
 # Finalisation

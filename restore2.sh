@@ -21,8 +21,12 @@ function restore_partition {
 
   return_value=0
 
+  image=$(grep "^$num:" $RH_CONF | cut -d ':' -f4 )
+  partition=$(grep "^$num:" $RH_CONF | cut -d ':' -f 3)
+  type=$(grep "^$num:" $RH_CONF | cut -d ':' -f 5)
+
   # Nettoyage des entrées UEFI (si Windows a mis le bazard)
-  if [ "$num" == "u" ]
+  if [ "$type" == "efi" ]
   then
     # Effacer toutes les entrées actuelles
     for res in $(efibootmgr -v | grep -E "(debian|Microsoft)" | grep -E "^Boot[0-9]" | cut -d ' ' -f 1)
@@ -34,10 +38,8 @@ function restore_partition {
 
     # Ajout d'une nouvelle entrée EFI"
     # XXX -p 2 indique la partition EFI se trouve dans sda2.
-    # Trouver automatiquement le numéro de la partition
-    efipart=$(fdisk -l | grep EFI | cut -d ' ' -f 1)
-    disk=${efipart%?}
-    partnum=$(echo -n $efipart | tail -c 1)
+    disk=${partition%?}
+    partnum=$(echo -n $partition | tail -c 1)
     efibootmgr -q -c -d $disk -p $partnum -L "RESTORE-HOPE" -l "\EFI\debian\grubx64.efi"
 
     # Numéro de la nouvelle entrée
@@ -51,8 +53,6 @@ function restore_partition {
 
     return 0
   fi
-
-  image="$(grep "^$num:" $RH_CONF | cut -d: -f4)"
 
   # image est vide ("") si $num ne correspond à aucun système
   if [ "$image" == "" ]
@@ -70,9 +70,6 @@ function restore_partition {
     echo -e "${RED}Pas d'image pour ce système${NC}"
     return_value=1
   else
-    partition="$(grep "^$num:" $RH_CONF | cut -d: -f3)"
-    type="$(grep "^$num:" $RH_CONF | cut -d: -f5)"
-
     set -o pipefail
 
     zcat $image | partclone.$type -r -o $partition
@@ -149,9 +146,6 @@ do
     echo -e "		${RED}Pas d'image pour le système \"$label\"${NC}"
   fi
 done
-
-echo ""
-echo "		u   Boot UEFI"
 
 echo ""
 echo -n "	Entrez le numéro du système à restaurer : "
