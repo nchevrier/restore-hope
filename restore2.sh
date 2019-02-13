@@ -17,19 +17,33 @@ MOUNTDIR=/mnt/os
 mkdir -p $MOUNTDIR
 
 function loterie_nudge {
-  timeout 5 cmatrix
+  # N'affiche rien avec cmatrix dans un script ... A partir d'un terminal, pas de problème !
+  #timeout 5 cmatrix
+
+  # Lancer cmatrix en background et récupérer son PID
+  cmatrix &
+  pid=$!
+
+  sleep 5
+
+  # Envoyer un Ctrl-C à cmatrix
+  kill -INT $pid
+
+  # "Réparer" le tty (pas de retour à la ligne ni d'écho de caractère
+  # après la destruction de cmatrix
+  stty sane
 
   numero=$((RANDOM % 1000))
 
   if [ $numero -eq 42 ]
   then
-    echo -e "${GREEN}VOUS REMPORTEZ LE GROS LOT !!!${NC}"
+    echo -e "	${GREEN}VOUS REMPORTEZ LE GROS LOT !!!${NC}"
 
     ./$RH_BIN_DIR/mario-victory.sh
 
     sleep 120
   else
-    echo -e "${RED}Perdu !${NC} Retentez votre chance à la fin du prochain TP !"
+    echo -e "	${RED}Perdu !${NC} Retentez votre chance à la fin du prochain TP !"
   fi
 
   echo ""
@@ -87,12 +101,12 @@ function restore_partition {
     return_value=1
   elif [ ! -s "$image" ]
   then
-    echo -e "${RED}Pas d'image pour ce système${NC}"
+    echo -e "${RED}	Pas d'image pour ce système${NC}"
     return_value=1
   else
-    echo -e "${GREEN}Nouveau !${NC}Appuyez sur Entrée pour participer à la Loterie R&T ..."
+    echo -e "${GREEN}	Nouveau !${NC} Appuyez sur Entrée pour participer à la Loterie R&T ..."
 
-    read -t 5 user_input
+    read -t 5 loterie_input
 
     # Pas un timeout
     if [ $? -eq 0 ]
@@ -141,7 +155,7 @@ echo ""
 echo ""
 echo ""
 
-echo "	Restore Hope - Restauration automatique v1.97 (11/02/2019)"
+echo "	Restore Hope - Restauration automatique v1.97 (13/02/2019)"
 echo "	IUT R/T Vitry - Anthony Delaplace, Brice Augustin, Benoit Albert et Coumaravel Soupramanien"
 echo ""
 echo "	Systèmes à restaurer :"
