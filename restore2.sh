@@ -24,7 +24,7 @@ function loterie_nudge {
   cmatrix &
   pid=$!
 
-  sleep 5
+  sleep 10
 
   # Envoyer un Ctrl-C à cmatrix
   kill -INT $pid
@@ -61,6 +61,7 @@ function loterie_nudge {
     sleep 120
   else
     echo -e "	${RED}Perdu !${NC} Retentez votre chance à la fin du prochain TP !"
+    sleep 10
   fi
 
   echo ""
@@ -80,6 +81,7 @@ function restore_partition {
   # Nettoyage des entrées UEFI (si Windows a mis le bazard)
   if [ "$type" == "efi" ]
   then
+    echo "Restauration du boot UEFI ..."
     # Effacer toutes les entrées actuelles
     for res in $(efibootmgr -v | grep -E "(debian|Microsoft)" | grep -E "^Boot[0-9]" | cut -d ' ' -f 1)
     do
