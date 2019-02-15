@@ -46,7 +46,9 @@ function loterie_nudge {
   echo ""
   echo ""
 
-  numero=$((RANDOM % 1000))
+  # TODO : augmenter la probabilité en septembre/octobre
+  # pour créer une habitude
+  numero=$((RANDOM % 100))
 
   if [ $numero -eq 42 ]
   then
