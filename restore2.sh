@@ -24,7 +24,7 @@ function loterie_nudge {
   cmatrix &
   pid=$!
 
-  sleep 10
+  sleep 7
 
   # Envoyer un Ctrl-C à cmatrix
   kill -INT $pid
