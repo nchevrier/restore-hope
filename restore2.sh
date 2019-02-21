@@ -138,6 +138,8 @@ function restore_partition {
       loterie_nudge
     fi
 
+    echo ""
+
     set -o pipefail
 
     zcat $image | partclone.$type -r -o $partition
