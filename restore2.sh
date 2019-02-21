@@ -3,6 +3,10 @@
 export RH_BIN_DIR="/usr/local/sbin"
 export RH_DIR="/root/rh2"
 
+# Si initialisé avec "dumb" (après un exec via RH ?),
+# cmatrix n'affiche rien dans le terminal
+export TERM=linux
+
 ####
 # Text colors
 ####
