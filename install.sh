@@ -22,6 +22,7 @@ rm $LOGFILE &> /dev/null
 # Paramètres
 ####
 ENABLE_LOGIN=0
+PRESERVE_KEY=0
 
 if [ $# -eq 1 ]
 then
@@ -29,6 +30,10 @@ then
   then
     echo "Le mot de passe root sera demandé avant la restauration d'un OS"
     ENABLE_LOGIN=1
+  elif [ $1 == "preserve" ]
+  then
+    echo "On garde la clé RSA actuelle"
+    PRESERVE_KEY=1
   fi
 fi
 
@@ -70,11 +75,17 @@ apt-get install -y cmatrix >> $LOGFILE 2>&1
 # SSH
 ####
 
-# Pas de passphrase, écraser (y) la clé si elle existe déjà
-yes y | ssh-keygen -f ~/.ssh/id_rsa -N "" >> $LOGFILE 2>&1
+# Quick and dirty fix : garder la clé RSA actuelle
+# si l'utilisateur le demande (utile pour la màj de Restore Hope
+# en parallèle sur tous les systèmes (sans clonage)
+if [ $PRESERVE_KEY -eq 0 ]
+then
+  # Pas de passphrase, écraser (y) la clé si elle existe déjà
+  yes y | ssh-keygen -f ~/.ssh/id_rsa -N "" >> $LOGFILE 2>&1
 
-# Copie de la clé publique dans les clés autorisées pour la connexion SSH
-cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
+  # Copie de la clé publique dans les clés autorisées pour la connexion SSH
+  cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_keys
+fi
 
 # Autoriser la connexion SSH avec le login root
 sed -i -E '/PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
