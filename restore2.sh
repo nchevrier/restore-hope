@@ -58,21 +58,24 @@ function loterie_nudge {
   then
     echo -e "	${GREEN}VOUS REMPORTEZ LE GROS LOT !!!${NC}"
 
-    for i in {1..3}
+    for i in {1..5}
     do
       $RH_BIN_DIR/mario-victory.sh
-      sleep 10
+      sleep 5
     done
-
-    sleep 120
   else
     echo -e "	${RED}Perdu !${NC} Retentez votre chance à la fin du prochain TP !"
-    sleep 10
   fi
 
   echo ""
   echo ""
   echo ""
+}
+
+# Appelée quand l'utilisateur appuie sur Ctrl-C ou Ctrl-Z
+function ctrl_c() {
+  echo -e "Détection d'une ${RED}tentative de triche${NC} !"
+  echo -e "Appelez votre chargé de TP pour qu'il vous enlève ${RED}2 points${NC} ..."
 }
 
 function restore_partition {
@@ -84,6 +87,9 @@ function restore_partition {
   # Pas suffisant ! Si pressé 7 fois en 2 secondes, systemd déclenche un reboot !
   #systemctl mask ctrl-alt-del.target
   #systemctl daemon-reload
+  # Capturer Ctrl-C et Ctrl-Z pendant la restauration
+  trap ctrl_c INT
+  trap ctrl_c TSTP
 
   image=$(grep "^$num:" $RH_CONF | cut -d ':' -f4 )
   partition=$(grep "^$num:" $RH_CONF | cut -d ':' -f 3)
@@ -155,17 +161,40 @@ function restore_partition {
         fi
       fi
 
+      # Activer le Job Control pour que la restauration ne puisse pas
+      # être interrompue par un Ctrl-C ou Ctrl-Z dans le terminal
+      set -m
+
       umount $partition &> /dev/null
 
       echo ""
 
+      # La valeur de retour d'un pipeline est 0 si _tous_ les processus
+      # ont retourné 0
+      # (Par défaut, c'est le code de retour du dernier processus)
       set -o pipefail
 
-      zcat $image | partclone.$type -r -o $partition
+      # Restaurer l'image demandée.
+      # En arrière-plan pour éviter qu'elle soit interrompue par un Ctrl-C
+      # dans le terminal (voir set -m)
+      zcat $image | partclone.$type -r -o $partition &
 
-      return_value=$?
+      # PID de partclone
+      pid=$!
+
+      # Tant que le processus partclone existe
+      while kill -0 $pid &> /dev/null
+      do
+        # Attendre la fin de la restauration. Si l'utilisateur tape Ctrl-C,
+        # le handler attrape le signal puis l'exécution reprend
+        # avec une nouvelle itération
+        wait $pid &> /dev/null
+        return_value=$?
+      done
 
       set +o pipefail
+
+      set +m
 
       # Effacer l'indicateur de restauration
       # (juste au cas où on l'a oublié sur le master)
@@ -179,6 +208,9 @@ function restore_partition {
   # Réactiver Ctrl-Alt-Del
   #systemctl unmask ctrl-alt-del.target
   #systemctl daemon-reload
+  # Désactiver la capture de Ctrl-C et Ctrl-Z
+  trap - INT
+  trap - TSTP
 
   return $return_value
 }
