@@ -138,16 +138,20 @@ function restore_partition {
       # Proposer la loterie slt si la partition n'est pas déjà restaurée
       if [ -f $MOUNTDIR/tainted -o -f $MOUNTDIR/taint/tainted -o $mount_OK -ne 0 ]
       then
-        echo ""
-        echo ""
-        echo -n -e "${GREEN}	Nouveau !${NC} Appuyez sur Entrée pour participer à la Loterie R&T ... "
-
-        read -t 5 loterie_input
-
-        # Pas un timeout
-        if [ $? -eq 0 ]
+        # Proposer la loterie slt si le dernier boot a eu lieu il y a plus de 5 min
+        if [ $TIME_SINCE_LASTBOOT -gt 300 ]
         then
-          loterie_nudge
+          echo ""
+          echo ""
+          echo -n -e "${GREEN}	Nouveau !${NC} Appuyez sur Entrée pour participer à la Loterie R&T ... "
+
+          read -t 5 loterie_input
+
+          # Pas un timeout
+          if [ $? -eq 0 ]
+          then
+            loterie_nudge
+          fi
         fi
       fi
 
@@ -187,6 +191,17 @@ then
   exit
 fi
 
+# Calculer l'intervalle de temps depuis le dernier boot
+now=$(date "+%s")
+lastboot=0
+if [ -f $RH_DIR/lastboot ]
+then
+  lastboot=$(cat $RH_DIR/lastboot)
+fi
+echo $now > $RH_DIR/lastboot
+
+TIME_SINCE_LASTBOOT=$(($now - $lastboot))
+
 clear
 
 echo ""
@@ -205,6 +220,7 @@ echo "	IUT R/T Vitry - Anthony Delaplace, Brice Augustin, Benoit Albert et Couma
 echo ""
 echo "	Systèmes à restaurer :"
 
+# Afficher le menu
 for i in $(seq 1 $nbr_sys)
 do
   partition="$(grep "^$i:" $RH_CONF | cut -d: -f3)"
