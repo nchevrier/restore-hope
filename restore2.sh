@@ -80,6 +80,11 @@ function restore_partition {
 
   return_value=0
 
+  # Empêcher Marcial de gruger
+  # Pas suffisant ! Si pressé 7 fois en 2 secondes, systemd déclenche un reboot !
+  #systemctl mask ctrl-alt-del.target
+  #systemctl daemon-reload
+
   image=$(grep "^$num:" $RH_CONF | cut -d ':' -f4 )
   partition=$(grep "^$num:" $RH_CONF | cut -d ':' -f 3)
   type=$(grep "^$num:" $RH_CONF | cut -d ':' -f 5)
@@ -110,56 +115,66 @@ function restore_partition {
     efibootmgr -q -o $id
 
     sleep 5
-
-    return 0
-  fi
-
-  # image est vide ("") si $num ne correspond à aucun système
-  if [ "$image" == "" ]
-  then
-    echo ""
-
-    for i in {1..18}
-    do
-      echo "	Quand on me demande un numéro entre 1 et $nbr_sys je donne un numéro entre 1 et $nbr_sys"
-    done
-
-    return_value=1
-  elif [ ! -s "$image" ]
-  then
-    echo -e "${RED}	Pas d'image pour ce système${NC}"
-    return_value=1
   else
-    echo ""
-    echo ""
-    echo -n -e "${GREEN}	Nouveau !${NC} Appuyez sur Entrée pour participer à la Loterie R&T ... "
-
-    read -t 5 loterie_input
-
-    # Pas un timeout
-    if [ $? -eq 0 ]
+    # image est vide ("") si $num ne correspond à aucun système
+    if [ "$image" == "" ]
     then
-      loterie_nudge
+      echo ""
+
+      for i in {1..18}
+      do
+        echo "	Quand on me demande un numéro entre 1 et $nbr_sys je donne un numéro entre 1 et $nbr_sys"
+      done
+
+      return_value=1
+    elif [ ! -s "$image" ]
+    then
+      echo -e "${RED}	Pas d'image pour ce système${NC}"
+      return_value=1
+    else
+      # Si la partition n'est pas déjà restaurée, proposer la loterie
+      mount $partition $MOUNTDIR &> /dev/null
+      mount_OK=$?
+
+      if [ -f $MOUNTDIR/tainted -o -f $MOUNTDIR/taint/tainted -o $mount_OK -ne 0 ]
+      then
+        echo ""
+        echo ""
+        echo -n -e "${GREEN}	Nouveau !${NC} Appuyez sur Entrée pour participer à la Loterie R&T ... "
+
+        read -t 5 loterie_input
+
+        # Pas un timeout
+        if [ $? -eq 0 ]
+        then
+          loterie_nudge
+        fi
+      fi
+
+      umount $partition &> /dev/null
+
+      echo ""
+
+      set -o pipefail
+
+      zcat $image | partclone.$type -r -o $partition
+
+      return_value=$?
+
+      set +o pipefail
+
+      # Effacer l'indicateur de restauration
+      # (juste au cas où on l'a oublié sur le master)
+      mount $partition $MOUNTDIR
+      [ -f $MOUNTDIR/tainted ] && rm $MOUNTDIR/tainted
+      [ -f $MOUNTDIR/taint/tainted ] && rm $MOUNTDIR/taint/tainted
+      umount $MOUNTDIR
     fi
-
-    echo ""
-
-    set -o pipefail
-
-    zcat $image | partclone.$type -r -o $partition
-
-    return_value=$?
-
-    set +o pipefail
-
-    # Effacer l'indicateur de restauration
-    # (juste au cas où on l'a oublié sur le master)
-    mount $partition $MOUNTDIR
-    [ -f $MOUNTDIR/tainted ] && rm $MOUNTDIR/tainted
-    [ -f $MOUNTDIR/taint/tainted ] && rm $MOUNTDIR/taint/tainted
-    umount $MOUNTDIR
-
   fi
+
+  # Réactiver Ctrl-Alt-Del
+  #systemctl unmask ctrl-alt-del.target
+  #systemctl daemon-reload
 
   return $return_value
 }
@@ -185,7 +200,7 @@ echo ""
 echo ""
 echo ""
 
-echo "	Restore Hope - Restauration automatique v1.97 (13/02/2019)"
+echo "	Restore Hope - Restauration automatique v1.98 (10/03/2019)"
 echo "	IUT R/T Vitry - Anthony Delaplace, Brice Augustin, Benoit Albert et Coumaravel Soupramanien"
 echo ""
 echo "	Systèmes à restaurer :"
