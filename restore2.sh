@@ -132,10 +132,10 @@ function restore_partition {
       echo -e "${RED}	Pas d'image pour ce système${NC}"
       return_value=1
     else
-      # Si la partition n'est pas déjà restaurée, proposer la loterie
       mount $partition $MOUNTDIR &> /dev/null
       mount_OK=$?
 
+      # Proposer la loterie slt si la partition n'est pas déjà restaurée
       if [ -f $MOUNTDIR/tainted -o -f $MOUNTDIR/taint/tainted -o $mount_OK -ne 0 ]
       then
         echo ""
@@ -211,6 +211,7 @@ do
   num=$(grep "^$i:" $RH_CONF | cut -d: -f1)
   label=$(grep "^$i:" $RH_CONF | cut -d: -f2)
   image=$(grep "^$i:" $RH_CONF | cut -d: -f4)
+  type=$(grep "^$num:" $RH_CONF | cut -d ':' -f 5)
 
   # Afficher le système slt si son image existe
   # et que sa taille n'est pas nulle
@@ -232,7 +233,12 @@ do
 
     umount $partition &> /dev/null
   else
-    echo -e "		${RED}Pas d'image pour le système \"$label\"${NC}"
+    # Ne pas afficher le message pour une partition EFI,
+    # même si sa fausse image a été supprimée de /home/restore
+    if [ "$type" != "efi" ]
+    then
+      echo -e "		${RED}Pas d'image pour le système \"$label\"${NC}"
+    fi
   fi
 done
 
