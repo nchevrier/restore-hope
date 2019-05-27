@@ -1,4 +1,5 @@
 #!/bin/bash
+
 base_r="/etc/restore/base_restore.conf"
 nbr_sys=$(grep "^nbr_systemes" $base_r | cut -d: -f2 )
 num=0
@@ -54,5 +55,3 @@ quest_crea=1
 		fi
 
 	fi
-
-
