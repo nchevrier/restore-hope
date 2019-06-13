@@ -178,11 +178,9 @@ then
   rp=$(realpath $filepath)
   dirname=$(dirname $rp)
 
-  # remove trailing slash for future comparison with source dir
-  dstpath=${2%/}
-
   # will happen only in RH copy
-  if [ $dirname == $dstpath ]
+  # Check if both paths point to the same directory
+  if [ $dirname -ef $dstpath ]
   then
     echo -e "${RED}Cannot copy in the same directory.${NC}"
     exit
