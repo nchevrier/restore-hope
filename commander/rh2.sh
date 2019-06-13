@@ -180,7 +180,7 @@ then
 
   # will happen only in RH copy
   # Check if both paths point to the same directory
-  if [ $dirname -ef $dstpath ]
+  if [ "$dirname" -ef "$dstpath" ]
   then
     echo -e "${RED}Cannot copy in the same directory.${NC}"
     exit
