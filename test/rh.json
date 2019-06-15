@@ -1,0 +1,79 @@
+{
+  "variables": {
+      "ova_path": "/Users/stinaugu/Downloads/debian-stretch.ova",
+      "physical_nic": "en0"
+  },
+  "builders": [
+  {
+    "type": "virtualbox-ovf",
+    "source_path": "{{user `ova_path`}}",
+    "ssh_username": "root",
+    "ssh_password": "vitrygtr",
+    "vm_name": "rh",
+    "keep_registered": "True",
+    "skip_export": "True",
+    "shutdown_command": "shutdown -P now",
+    "post_shutdown_delay": "10s",
+
+    "vboxmanage": [
+      [
+        "modifyvm",
+        "{{.Name}}",
+        "--nic2",
+        "hostonly"
+      ],
+      [
+        "modifyvm",
+        "{{.Name}}",
+        "--hostonlyadapter2",
+        "vboxnet0"
+      ]
+    ],
+    
+    "vboxmanage_post": [
+      [
+        "modifyvm",
+        "{{.Name}}",
+        "--nic1",
+        "bridged"
+      ],
+      [
+        "modifyvm",
+        "{{.Name}}",
+        "--bridgeadapter1",
+        "{{user `physical_nic`}}"
+      ]
+    ]
+  }],
+   "provisioners": [
+  {
+    "type": "file",
+    "source": "admin",
+    "destination": "/root"
+  },
+  {
+    "type": "file",
+    "source": "commander",
+    "destination": "/root"
+  },
+  {
+    "type": "file",
+    "source": "nudge",
+    "destination": "/root"
+  },
+  {
+    "type": "file",
+    "source": "puppets",
+    "destination": "/root"
+  },
+  {
+    "type": "file",
+    "source": "restore2.sh",
+    "destination": "/root/restore2.sh"
+  },
+  {
+     "type": "shell",
+     "script": "install.sh"
+  }
+]
+}
