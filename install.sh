@@ -212,6 +212,18 @@ echo "GRUB_DISABLE_SUBMENU=y" >> /etc/default/grub
 chmod a-x /etc/grub.d/30_uefi-firmware
 
 ####
+# D/l l'installateur Debian etudiant, utilisé dans deux parties :
+# - (Inconditionnel) Préparation du master de RH
+# - (Ssi un autre Debian est détecté) Installation du Debian etudiant en chroot
+####
+wget --no-check-certificate https://github.com/brice-augustin/debian-etudiant/archive/master.zip -O master.zip
+
+unzip -o master.zip >> $LOGFILE 2>&1
+
+# Faire une sauvegarde des scripts de préparation du master (pour RH, plus tard)
+cp -r debian-etudiant-master/prep .
+
+####
 # Post install du Debian etudiant (si présent)
 ####
 
@@ -221,13 +233,6 @@ count=$(os-prober | grep linux | wc -l)
 # Une seule autre partition Linux sur le dique. C'est forcément le Debian etudiant
 if [ $count -eq 1 ]
 then
-  wget --no-check-certificate https://github.com/brice-augustin/debian-etudiant/archive/master.zip -O master.zip
-
-  unzip -o master.zip >> $LOGFILE 2>&1
-
-  # Faire une sauvegarde des scripts de préparation du master (pour RH, plus tard)
-  cp -r debian-etudiant-master/prep .
-
   mountdir="/mnt/debian-etudiant"
   mkdir -p $mountdir
 
