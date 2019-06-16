@@ -173,10 +173,21 @@ shift 2
 
 if [ $cmd == "send" ]
 then
+  # The source file
   filepath=$1
+
+  if [ ! -e $filepath ]
+  then
+    echo -e "${RED}Source ($filepath) does not exist.${NC}"
+    exit
+  fi
+
   basename=$(basename $filepath)
   rp=$(realpath $filepath)
   dirname=$(dirname $rp)
+
+  # The destination directory
+  dstpath=$2
 
   # will happen only in RH copy
   # Check if both paths point to the same directory
