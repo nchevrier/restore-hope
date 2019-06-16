@@ -1,11 +1,25 @@
 #!/bin/bash
 
-export PROXYIUT="proxy.iutcv.fr"
-export PROXYIUT_PORT="3128"
+####
+# Déterminer si on doit utiliser le proxy ou pas
+# Truc utilisé : si l'install a été faite avec le proxy, celui-ci
+# est configuré dans APT
+####
+# apt.conf n'existe pas si le proxy n'est pas configuré à l'install
+p=$(grep "^Acquire::http::Proxy" /etc/apt/apt.conf | cut -d'"' -f 2)
 
-# On aura besoin du proxy pendant les installations !
-export https_proxy=http://$PROXYIUT:$PROXYIUT_PORT
-export http_proxy=http://$PROXYIUT:$PROXYIUT_PORT
+if [ "$p" != "" ]
+then
+  tmp=${p%:*}
+  export PROXYIUT=${tmp#http://}
+
+  export PROXYIUT_PORT=${p##*:}
+
+  # Configurer temporairement le proxy (pour les curl, wget, etc. du script)
+  export http_proxy="http://$PROXYIUT:$PROXYIUT_PORT"
+  export https_proxy="http://$PROXYIUT:$PROXYIUT_PORT"
+  export ftp_proxy="http://$PROXYIUT:$PROXYIUT_PORT"
+fi
 
 if [ $EUID -ne 0 ]
 then
@@ -58,6 +72,7 @@ apt-get update -y >> $LOGFILE 2>&1
 apt-get install -y openssh-server \
                 socat \
                 beep \
+                unzip \
                 screen \
                 ethtool \
                 udpcast \
@@ -381,7 +396,7 @@ then
   # sur l'inexistence d'une image pour ce système
   echo "FAKE" > /home/restore/img_efi.FAKE.gz
 else
-  echo "Il existe plusieurs partitions EFI."
+  echo "Impossible de trouver la partition EFI."
   echo "A vous de lancer grub-install sur la bonne."
 fi
 
