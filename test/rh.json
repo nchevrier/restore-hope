@@ -29,7 +29,7 @@
         "vboxnet0"
       ]
     ],
-    
+
     "vboxmanage_post": [
       [
         "modifyvm",
@@ -48,32 +48,32 @@
    "provisioners": [
   {
     "type": "file",
-    "source": "admin",
+    "source": "../admin",
     "destination": "/root"
   },
   {
     "type": "file",
-    "source": "commander",
+    "source": "../commander",
     "destination": "/root"
   },
   {
     "type": "file",
-    "source": "nudge",
+    "source": "../nudge",
     "destination": "/root"
   },
   {
     "type": "file",
-    "source": "puppets",
+    "source": "../puppets",
     "destination": "/root"
   },
   {
     "type": "file",
-    "source": "restore2.sh",
+    "source": "../restore2.sh",
     "destination": "/root/restore2.sh"
   },
   {
      "type": "shell",
-     "script": "install.sh"
+     "script": "../install.sh"
   }
 ]
 }
