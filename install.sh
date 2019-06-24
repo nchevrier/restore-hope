@@ -359,13 +359,15 @@ sed -i "/menuentry /s/'Windows[^']*'/'Windows'/" /boot/grub/grub.cfg
 # 3) Debian etudiant
 if [ "$DEBIAN_PART" != "" ]
 then
-  sed -i "/menuentry /s/'[^']*Linux[^']*sur ${DEBIAN_PART//\//\\/}\)'/'Debian Linux'/" /boot/grub/grub.cfg
+  # Bash Gods
+  # https://stackoverflow.com/questions/27787536/how-to-pass-a-variable-containing-slashes-to-sed
+  sed -E -i "/menuentry /s/'[^']*Linux[^']*sur ${DEBIAN_PART//\//\\/}\)'/'Debian Linux'/" /boot/grub/grub.cfg
 fi
 
 # 4) Proxmox etudiant
 if [ "$PROXMOX_PART" != "" ]
 then
-  sed -i "/menuentry /s/'[^']*Linux[^']*sur ${PROXMOX_PART//\//\\/}\)'/'Proxmox'/" /boot/grub/grub.cfg
+  sed -E -i "/menuentry /s/'[^']*Linux[^']*sur ${PROXMOX_PART//\//\\/}\)'/'Proxmox'/" /boot/grub/grub.cfg
 fi
 
 # Sauvegarder grub.cfg au cas où il est détruit
