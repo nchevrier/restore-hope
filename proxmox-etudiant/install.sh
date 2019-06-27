@@ -15,26 +15,17 @@ fi
 netid=$(cut -d '.' -f1-3 <<< $gw)
 
 ipaddr="$netid.42"
+# Adresse IP par défaut, conforme au TP actuel
+ipaddr="198.51.100.42"
 
-hostname=$(hostname)
-
-# On suppose qu'il n'y a qu'une seule carte réseau
-# TODO : prévoir le cas du PC central avec plusieurs cartes
-cat > /etc/network/interfaces << EOF
-auto lo
-iface lo inet loopback
-auto eth0
-iface eth0 inet manual
-
-auto vmbr0
-iface vmbr0 inet static
-  address $ipaddr/24
-  gateway $gw
-  bridge_ports eth0
-EOF
+# En chroot, hostname renvoie le nom du système hôte (pas celui chrooté)
+hostname=$(cat /etc/hostname)
 
 # Supprimer la ligne liant le nom de l'hôte à l'IP locale (Proxmox n'aime pas)
 sed -i -E '/^127.0.1.1/d' /etc/hosts
+
+# Supprimer toute ligne liant l'adresse IP par défaut
+sed -i -E "/^$ipaddr\s/d" /etc/hosts
 
 # Ajouter une entrée qui lie le nom de l'hôte à son IP
 sed -i -E '/^127.0.0.1/a\'$ipaddr' '$hostname /etc/hosts
@@ -56,3 +47,21 @@ apt install proxmox-ve postfix open-iscsi
 pushd prep
 ./masterprep.sh
 popd
+
+# Ugly; désactiver la config des cartes réseau au prochain reboot
+systemctl disable init-interfaces.service
+
+# On suppose qu'il n'y a qu'une seule carte réseau
+# TODO : prévoir le cas du PC central avec plusieurs cartes
+cat > /etc/network/interfaces << EOF
+auto lo
+iface lo inet loopback
+auto eth0
+iface eth0 inet manual
+
+auto vmbr0
+iface vmbr0 inet static
+  address $ipaddr/24
+  gateway $gw
+  bridge_ports eth0
+EOF
