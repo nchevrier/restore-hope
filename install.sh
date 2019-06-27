@@ -299,9 +299,10 @@ do
     cp -r proxmox-etudiant $mountdir/root
     cp -r debian-etudiant-master/prep $mountdir/root/proxmox-etudiant
 
+    chroot $mountdir /bin/bash -c "cd /root/proxmox-etudiant; ./install.sh"
+
+    rm -rf $mountdir/root/proxmox-etudiant
   fi
-
-
 
   # Installer grub avant de copier default/grub, sinon apt couine
   # (demande de choisir entre les deux versions de fichiers)
