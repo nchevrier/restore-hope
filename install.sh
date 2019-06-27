@@ -294,7 +294,14 @@ do
     # Supprimer les scripts sur le Debian etudiant (on en a plus besoin)
     cp $mountdir/root/debian-etudiant-master/.debian-etudiant.log .
     rm -rf $mountdir/root/debian-etudiant-master
+  elif [ "$DETECTED_OS" == "Proxmox" ]
+  then
+    cp -r proxmox-etudiant $mountdir/root
+    cp -r debian-etudiant-master/prep $mountdir/root/proxmox-etudiant
+
   fi
+
+
 
   # Installer grub avant de copier default/grub, sinon apt couine
   # (demande de choisir entre les deux versions de fichiers)
@@ -351,7 +358,7 @@ done # Liste des autres OS Debian
 # grub.cfg sur cette partition, il ajoute les entrées de ce fichier
 # (normalement il n'y en aura qu'une; voir plus haut)
 # Idem dans le cas de Proxmox : comme on a supprimé tous les kernels de base,
-# seul le kernel PVE doit apparaitre. 
+# seul le kernel PVE doit apparaitre.
 update-grub
 
 # Renommer les entrées crées dans grub.cfg :
