@@ -24,8 +24,9 @@ hostname=$(cat /etc/hostname)
 # Supprimer la ligne liant le nom de l'hôte à l'IP locale (Proxmox n'aime pas)
 sed -i -E '/^127.0.1.1/d' /etc/hosts
 
-# Supprimer toute ligne liant l'adresse IP par défaut
+# Supprimer toute ligne liant l'adresse IP par défaut ou le nom
 sed -i -E "/^$ipaddr\s/d" /etc/hosts
+sed -i -E "/\s$hostname\$/d" /etc/hosts
 
 # Ajouter une entrée qui lie le nom de l'hôte à son IP
 sed -i -E '/^127.0.0.1/a\'$ipaddr' '$hostname /etc/hosts
