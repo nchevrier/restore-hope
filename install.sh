@@ -303,6 +303,13 @@ do
   # Copier le fichier de conf grub de RH sur le Debian/Proxmox etudiant
   cp /etc/default/grub $mountdir/etc/default
 
+  if [ "$DETECTED_OS" == "Proxmox" ]
+  then
+    # Grub ajoute une entrée (dans grub.conf) pour chaque kernel trouvé.
+    # Supprimer les kernels superflux pour Promox.
+    chroot $mountdir /bin/bash -c "apt remove --purge -y '^linux-image-.*'" >> $LOGFILE 2>&1
+  fi
+
   # Génère une unique entrée (pour le Debian/Proxmox etudiant)
   # Ne pas ajouter d'entrée "setup" pour EFI
   # Ne pas prober les autres OS
@@ -343,6 +350,8 @@ done # Liste des autres OS Debian
 # par os_prober. Dans le cas de Debian etudiant, si os_prober trouve un
 # grub.cfg sur cette partition, il ajoute les entrées de ce fichier
 # (normalement il n'y en aura qu'une; voir plus haut)
+# Idem dans le cas de Proxmox : comme on a supprimé tous les kernels de base,
+# seul le kernel PVE doit apparaitre. 
 update-grub
 
 # Renommer les entrées crées dans grub.cfg :
