@@ -1,6 +1,13 @@
 #!/bin/bash
 
 ####
+# Text colors
+####
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+####
 # Déterminer si on doit utiliser le proxy ou pas
 # Truc utilisé : si l'install a été faite avec le proxy, celui-ci
 # est configuré dans APT
@@ -453,7 +460,9 @@ popd
 #systemctl restart getty@tty1
 
 echo "Installation terminée."
-echo "Ne pas démarrer Debian etudiant et Restore Hope avant de déployer le master."
+echo "Si vous démarrez un des Debian (etudiant, Promxox et RH) ${RED}avant de déployer le master${NC},"
+echo "exécutez la commande suivante ${RED}avant de l'arrêter :${NC}"
+echo "${GREEN}sudo systemctl enable init-interfaces.service${NC}"
 # Si c'est le cas, sur le Linux qui a été démarré :
 # systemctl enable init-interfaces.service
 # systemctl daemon-reload
