@@ -247,7 +247,7 @@ echo ""
 echo ""
 echo ""
 
-echo "	Restore Hope - Restauration automatique v1.98 (10/03/2019)"
+echo "	Restore Hope - Restauration automatique v1.99 (09/09/2019)"
 echo "	IUT R/T Vitry - Anthony Delaplace, Brice Augustin, Benoit Albert et Coumaravel Soupramanien"
 echo ""
 echo "	Systèmes à restaurer :"
