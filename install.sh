@@ -460,9 +460,10 @@ popd
 #systemctl restart getty@tty1
 
 echo "Installation terminée."
-echo "Si vous démarrez un des Debian (etudiant, Promxox et RH) ${RED}avant de déployer le master${NC},"
-echo "exécutez la commande suivante ${RED}avant de l'arrêter :${NC}"
-echo "${GREEN}sudo systemctl enable init-interfaces.service${NC}"
+echo -e "Si vous démarrez un des Debian (etudiant, Promxox et RH) ${RED}avant de déployer le master${NC},"
+echo -e "exécutez la commande suivante ${RED}avant de l'arrêter :${NC}"
+echo -e "${GREEN}sudo systemctl enable init-interfaces.service${NC}"
+echo -e "${GREEN}history -c${NC}"
 # Si c'est le cas, sur le Linux qui a été démarré :
 # systemctl enable init-interfaces.service
 # systemctl daemon-reload
