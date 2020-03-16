@@ -80,7 +80,10 @@ function ctrl_c() {
 
 function restore_partition {
   num=$1
-
+  if [ $num == "42" ]
+    then
+      loterie_nudge
+  fi
   return_value=0
 
   # Empêcher Marcial de gruger
