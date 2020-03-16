@@ -52,7 +52,13 @@ function loterie_nudge {
 
   # TODO : augmenter la probabilité en septembre/octobre
   # pour créer une habitude
-  numero=$((RANDOM % 100))
+  if [ $num == "42" ]
+    then
+    numero=$num
+    else
+    numero=$((RANDOM % 100))
+  fi
+  
 
   if [ $numero -eq 42 ]
   then
@@ -80,7 +86,7 @@ function ctrl_c() {
 
 function restore_partition {
   num=$1
-  if [ $num == "42" ]
+if [ $num == "42" ]
     then
       loterie_nudge
   fi
